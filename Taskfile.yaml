@@ -1,0 +1,15 @@
+version: "3"
+
+tasks:
+  fmt:php:
+    desc: Format php files
+    sources:
+      - "**/*.php"
+    cmds:
+      - vendor/bin/php-cs-fixer fix
+  fmt:other:
+    desc: Format other files
+    sources:
+      - "**/*.yaml"
+    cmds:
+      - npx prettier -w .
