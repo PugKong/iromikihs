@@ -1,0 +1,22 @@
+{$SERVER_NAME}
+
+log
+encode zstd gzip
+
+route /build/* {
+	root * /srv/app/public
+	file_server
+}
+
+route /favicon.svg {
+	root * /srv/app/public
+	file_server
+}
+
+route {
+	reverse_proxy unix//var/run/php/php-fpm.sock {
+		transport fastcgi {
+			root /srv/app/public/index.php
+		}
+	}
+}
