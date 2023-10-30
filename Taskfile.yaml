@@ -19,3 +19,34 @@ tasks:
       - "**/*.yaml"
     cmds:
       - npx prettier -w .
+
+  lint:
+    desc: Lint everything
+    deps: [lint:php, lint:symfony, lint:twig, lint:lang]
+  lint:php:
+    desc: Lint php files
+    sources:
+      - "**/*.php"
+    cmds:
+      - vendor/bin/phpstan analyze
+  lint:symfony:
+    desc: Lint symfony configuration
+    sources:
+      - "config/**/*.yaml"
+    cmds:
+      - bin/console lint:container
+      - bin/console lint:yaml config
+  lint:twig:
+    desc: Lint twig files
+    sources:
+      - "templates/**/*.twig"
+    cmds:
+      - bin/console lint:twig templates
+  lint:lang:
+    desc: Lint spelling
+    sources:
+      - "**/*.php"
+      - "**/*.yaml"
+      - "**/*.twig"
+    cmds:
+      - typos
