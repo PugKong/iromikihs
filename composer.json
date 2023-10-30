@@ -90,6 +90,7 @@
         }
     },
     "require-dev": {
+        "dama/doctrine-test-bundle": "^7.2",
         "friendsofphp/php-cs-fixer": "^3.37",
         "phpstan/phpstan": "^1.10",
         "phpunit/phpunit": "^9.5",
@@ -99,6 +100,8 @@
         "symfony/maker-bundle": "^1.0",
         "symfony/phpunit-bridge": "^6.3",
         "symfony/stopwatch": "6.3.*",
-        "symfony/web-profiler-bundle": "6.3.*"
+        "symfony/web-profiler-bundle": "6.3.*",
+        "zenstruck/foundry": "^1.36",
+        "zenstruck/messenger-test": "^1.9"
     }
 }
