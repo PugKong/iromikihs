@@ -30,6 +30,7 @@ tasks:
     desc: Lint php files
     sources:
       - "**/*.php"
+      - "phpstan.dist.neon"
     cmds:
       - vendor/bin/phpstan analyze
   lint:symfony:
