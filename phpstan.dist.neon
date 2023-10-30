@@ -9,3 +9,5 @@ parameters:
         - public/
         - src/
         - tests/
+    ignoreErrors:
+        - '#Method App\\Tests\\.*no value type specified in iterable type array.#'
