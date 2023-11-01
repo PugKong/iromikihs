@@ -26,9 +26,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private string $password;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $accountId;
+
     public function __construct()
     {
         $this->id = Uuid::v7();
+        $this->accountId = null;
     }
 
     public function getId(): UuidV7
@@ -66,6 +70,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPassword(string $password): self
     {
         $this->password = $password;
+
+        return $this;
+    }
+
+    public function getAccountId(): ?int
+    {
+        return $this->accountId;
+    }
+
+    public function setAccountId(?int $accountId): self
+    {
+        $this->accountId = $accountId;
 
         return $this;
     }

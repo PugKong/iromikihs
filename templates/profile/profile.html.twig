@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block body %}
+  {% for message in app.flashes('notice') %}
+    <div class="flash-notice">{{ message }}</div>
+  {% endfor %}
+
+  {% set user = app.user %}
+  {% if user.accountId is null %}
+    <div>Shikimori account is not linked</div>
+    <a class="link-account" href="{{ linkAccountUrl() }}">Link your account</a>
+  {% else %}
+    <div>Shikimori account id is {{ user.accountId }}</div>
+  {% endif %}
+{% endblock %}

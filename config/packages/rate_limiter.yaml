@@ -1,0 +1,17 @@
+parameters:
+  env(SHIKIMORI_RATE_LIMITER_POLICY): "fixed_window"
+  env(SHIKIMORI_RATE_LIMITER_LIMIT): "3"
+  env(SHIKIMORI_RATE_LIMITER_INTERVAL): "2 seconds"
+
+framework:
+  rate_limiter:
+    shikimori:
+      policy: "%env(SHIKIMORI_RATE_LIMITER_POLICY)%"
+      limit: "%env(int:SHIKIMORI_RATE_LIMITER_LIMIT)%"
+      interval: "%env(string:SHIKIMORI_RATE_LIMITER_INTERVAL)%"
+
+when@test:
+  framework:
+    rate_limiter:
+      shikimori:
+        cache_pool: "cache.shikimori_limiter"

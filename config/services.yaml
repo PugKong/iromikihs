@@ -31,3 +31,14 @@ when@test:
 
     App\Tests\Factory\:
       resource: "../tests/Factory/"
+
+    App\Tests\TestDouble\:
+      resource: "../tests/TestDouble/"
+
+    App\Shikimori\Client\Shikimori: '@App\Tests\TestDouble\Shikimori\ShikimoriStub'
+    App\Shikimori\Client\RateLimiter: '@App\Tests\TestDouble\Shikimori\RateLimiterSpy'
+
+    App\Shikimori\Client\RateLimiterSymfony:
+      public: true
+    App\Shikimori\Client\ShikimoriHttp:
+      public: true
