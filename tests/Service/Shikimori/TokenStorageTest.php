@@ -50,8 +50,7 @@ final class TokenStorageTest extends ServiceTestCase
 
     public function testStoreReplace(): void
     {
-        $user = UserFactory::createOne();
-        $token = TokenFactory::createOne(['user' => $user]);
+        $user = UserFactory::new()->withLinkedAccount()->create();
 
         $storage = self::getService(TokenStorage::class);
         $storage->store(
@@ -64,13 +63,15 @@ final class TokenStorageTest extends ServiceTestCase
             ),
         );
 
+        $token = $user->getToken();
+        self::assertNotNull($token);
         self::assertTokenData(
             new TokenData(
                 accessToken: $accessToken,
                 refreshToken: $refreshToken,
                 expiresAt: (new DateTimeImmutable('2007-01-03 03:04:05'))->getTimestamp(),
             ),
-            $token->object(),
+            $token,
         );
     }
 

@@ -12,47 +12,55 @@ final class ProfileControllerTest extends ControllerTestCase
 {
     use InteractsWithMessenger;
 
+    /**
+     * @dataProvider requiresAuthenticationProvider
+     */
+    public function testRequiresAuthentication(string $method, string $uri): void
+    {
+        self::assertRequiresAuthentication($method, $uri);
+    }
+
+    public static function requiresAuthenticationProvider(): array
+    {
+        return [
+            ['GET', '/profile'],
+            ['GET', '/profile/link'],
+        ];
+    }
+
     public function testProfile(): void
     {
-        $user = UserFactory::createOne(['accountId' => 6610]);
+        $user = UserFactory::new()->withLinkedAccount($accountId = 6610)->create();
 
-        $this->client->loginUser($user->object());
-        $this->client->request('GET', '/profile');
+        self::getClient()
+            ->loginUser($user->object())
+            ->request('GET', '/profile')
+        ;
 
         self::assertResponseIsSuccessful();
         self::assertPageTitleContains('Profile');
-        self::assertSelectorTextSame('div', 'Shikimori account id is 6610');
+
+        self::assertHasNoAccountLinkSection();
+        self::assertSelectorTextSame('div', "Shikimori account id is $accountId");
     }
 
     public function testProfileShikimoriAccountNotLinked(): void
     {
-        $this->client->loginUser(UserFactory::createOne()->object());
-        $this->client->request('GET', '/profile');
+        self::getClient()
+            ->loginUser(UserFactory::createOne()->object())
+            ->request('GET', '/profile')
+        ;
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextSame('div', 'Shikimori account is not linked');
-
-        $accountLinkButton = $this->client->getCrawler()->filter('a.link-account');
-        self::assertCount(1, $accountLinkButton);
-        self::assertSame('Link your account', $accountLinkButton->text());
-        $linkQuery = http_build_query([
-            'client_id' => 'shikimori_client_id',
-            'redirect_uri' => 'http://localhost/profile/link',
-            'response_type' => 'code',
-        ]);
-        self::assertSame('https://shikimori.example.com/oauth/authorize?'.$linkQuery, $accountLinkButton->attr('href'));
-    }
-
-    public function testProfileRequiresAuthentication(): void
-    {
-        $this->client->request('GET', '/profile');
-        self::assertResponseRedirects('http://localhost/login');
+        self::assertHasAccountLinkSection();
     }
 
     public function testLinkAccount(): void
     {
-        $this->client->loginUser($user = UserFactory::createOne()->object());
-        $this->client->request('GET', '/profile/link?code=the_code');
+        self::getClient()
+            ->loginUser($user = UserFactory::createOne()->object())
+            ->request('GET', '/profile/link?code=the_code')
+        ;
         self::assertResponseRedirects('/profile');
 
         $messages = $this->transport('async')->queue()->messages(LinkAccount::class);
@@ -60,20 +68,17 @@ final class ProfileControllerTest extends ControllerTestCase
         self::assertTrue($user->getId()->equals($messages[0]->userId));
         self::assertSame('the_code', $messages[0]->code);
 
-        $this->client->followRedirect();
+        self::getClient()->followRedirect();
         self::assertSelectorTextSame('.flash-notice', 'Your account will be linked soon.');
-    }
-
-    public function testLinkAccountRequiresAuthentication(): void
-    {
-        $this->client->request('GET', '/profile/link');
-        self::assertResponseRedirects('http://localhost/login');
+        self::assertHasAccountLinkSection();
     }
 
     public function testLinkAccountRequiresCodeQueryParameter(): void
     {
-        $this->client->loginUser(UserFactory::createOne()->object());
-        $this->client->request('GET', '/profile/link');
+        self::getClient()
+            ->loginUser(UserFactory::createOne()->object())
+            ->request('GET', '/profile/link')
+        ;
         self::assertResponseStatusCodeSame(404);
     }
 }

@@ -17,6 +17,7 @@ framework:
 
     routing:
       App\Message\LinkAccount: async
+      App\Message\SyncList: async
       Symfony\Component\Mailer\Messenger\SendEmailMessage: async
       Symfony\Component\Notifier\Message\ChatMessage: async
       Symfony\Component\Notifier\Message\SmsMessage: async

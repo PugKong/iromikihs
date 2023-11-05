@@ -38,9 +38,18 @@ final class UserFactory extends ModelFactory
         parent::__construct();
     }
 
+    public function withLinkedAccount(int $accountId = 6610): self
+    {
+        return $this->addState([
+            'accountId' => $accountId,
+            'token' => TokenFactory::new(),
+        ]);
+    }
+
     protected function getDefaults(): array
     {
         return [
+            'token' => null,
             'username' => self::faker()->userName(),
             'password' => 'qwerty',
         ];

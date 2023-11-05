@@ -32,6 +32,8 @@ use Zenstruck\Foundry\Proxy;
  */
 final class TokenFactory extends ModelFactory
 {
+    public const DEFAULT_ACCESS_TOKEN = 'default access token';
+
     private TokenDataEncryptor $tokenEncryptor;
 
     public function __construct(TokenDataEncryptor $tokenEncryptor)
@@ -44,9 +46,9 @@ final class TokenFactory extends ModelFactory
     protected function getDefaults(): array
     {
         return [
-            'user' => LazyValue::new(fn () => UserFactory::createOne()),
+            'user' => UserFactory::new(),
             'data' => LazyValue::new(fn () => $this->tokenEncryptor->encrypt(new TokenData(
-                accessToken: 'default access token',
+                accessToken: self::DEFAULT_ACCESS_TOKEN,
                 refreshToken: 'default refresh token',
                 expiresAt: (new DateTimeImmutable('+1 year'))->getTimestamp(),
             ))),

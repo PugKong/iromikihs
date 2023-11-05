@@ -12,15 +12,28 @@ use Doctrine\ORM\Mapping as ORM;
 class Token
 {
     #[ORM\Id]
-    #[ORM\OneToOne(targetEntity: User::class)]
+    #[ORM\OneToOne(inversedBy: 'token')]
     private User $user;
 
     #[ORM\Column(type: Types::TEXT)]
     private string $data;
 
+    public function getUser(): User
+    {
+        return $this->user;
+    }
+
     public function setUser(User $user): void
     {
+        if (!$user->hasToken() || $user->getToken() !== $this) {
+            $user->setToken($this);
+        }
         $this->user = $user;
+    }
+
+    public function hasUser(): bool
+    {
+        return false !== ($this->user ?? false);
     }
 
     public function getData(): string

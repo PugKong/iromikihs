@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Anime list{% endblock %}
+
+{% block body %}
+  {% for message in app.flashes('notice') %}
+    <div class="flash-notice">{{ message }}</div>
+  {% endfor %}
+
+  <twig:LinkAccountSection />
+
+  {% if app.user.linked %}
+    {{ form(syncForm) }}
+  {% endif %}
+
+  <table class="anime-list">
+    <thead>
+    <tr>
+      <th>Name</th>
+      <th>Kind</th>
+      <th>Status</th>
+      <th>Progress</th>
+      <th>Score</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for rate in userRates %}
+      <tr>
+        <td>{{ rate.anime.name }}</td>
+        <td>{{ rate.anime.kind.value }}</td>
+        <td>{{ rate.anime.status.value }}</td>
+        <td>{{ rate.status.value }}</td>
+        <td>{{ rate.score }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

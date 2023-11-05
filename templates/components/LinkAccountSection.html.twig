@@ -1,0 +1,5 @@
+{% if app.user is not null and not app.user.linked %}
+  <section>
+    Shikimori account is not linked. <a href="{{ this.linkUrl }}">Link your account</a> to enable sync.
+  </section>
+{% endif %}
