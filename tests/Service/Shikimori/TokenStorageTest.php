@@ -9,7 +9,6 @@ use App\Service\Shikimori\TokenDataEncryptor;
 use App\Service\Shikimori\TokenStorage;
 use App\Shikimori\Api\Auth\RefreshTokenRequest;
 use App\Shikimori\Api\Auth\TokenResponse;
-use App\Tests\Factory\TokenFactory;
 use App\Tests\Factory\UserFactory;
 use App\Tests\Service\ServiceTestCase;
 use App\Tests\TestDouble\Shikimori\ShikimoriStub;
@@ -37,14 +36,13 @@ final class TokenStorageTest extends ServiceTestCase
             ),
         );
 
-        $token = TokenFactory::find($user->getId());
         self::assertTokenData(
             new TokenData(
                 accessToken: $accessToken,
                 refreshToken: $refreshToken,
                 expiresAt: (new DateTimeImmutable('2007-01-03 03:04:05'))->getTimestamp(),
             ),
-            $token->object(),
+            $user->object(),
         );
     }
 
@@ -63,15 +61,13 @@ final class TokenStorageTest extends ServiceTestCase
             ),
         );
 
-        $token = $user->getToken();
-        self::assertNotNull($token);
         self::assertTokenData(
             new TokenData(
                 accessToken: $accessToken,
                 refreshToken: $refreshToken,
                 expiresAt: (new DateTimeImmutable('2007-01-03 03:04:05'))->getTimestamp(),
             ),
-            $token,
+            $user->object(),
         );
     }
 
@@ -79,10 +75,8 @@ final class TokenStorageTest extends ServiceTestCase
     {
         self::mockTime(new DateTimeImmutable('2007-01-03 03:04:05'));
 
-        $user = UserFactory::createOne();
-        TokenFactory::createOne([
-            'user' => $user,
-            'data' => self::getService(TokenDataEncryptor::class)->encrypt(new TokenData(
+        $user = UserFactory::createOne([
+            'token' => self::getService(TokenDataEncryptor::class)->encrypt(new TokenData(
                 accessToken: $expectedToken = 'the access token',
                 refreshToken: 'doesnt matter',
                 expiresAt: (new DateTimeImmutable('2007-01-03 03:05:05'))->getTimestamp(),
@@ -97,10 +91,8 @@ final class TokenStorageTest extends ServiceTestCase
     {
         self::mockTime(new DateTimeImmutable('2007-01-03 03:04:05'));
 
-        $user = UserFactory::createOne();
-        $token = TokenFactory::createOne([
-            'user' => $user,
-            'data' => self::getService(TokenDataEncryptor::class)->encrypt(new TokenData(
+        $user = UserFactory::createOne([
+            'token' => self::getService(TokenDataEncryptor::class)->encrypt(new TokenData(
                 accessToken: 'expired access token',
                 refreshToken: $oldRefreshToken = 'the refresh token',
                 expiresAt: (new DateTimeImmutable('2007-01-03 03:05:04'))->getTimestamp(),
@@ -127,7 +119,7 @@ final class TokenStorageTest extends ServiceTestCase
                 refreshToken: $newRefreshToken,
                 expiresAt: (new DateTimeImmutable('2007-01-04 03:04:05'))->getTimestamp(),
             ),
-            $token->object(),
+            $user->object(),
         );
     }
 }

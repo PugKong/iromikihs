@@ -14,7 +14,6 @@ use App\Shikimori\Api\User\AnimeRatesRequest;
 use App\Shikimori\Api\User\AnimeRatesResponse;
 use App\Tests\Factory\AnimeFactory;
 use App\Tests\Factory\AnimeRateFactory;
-use App\Tests\Factory\TokenFactory;
 use App\Tests\Factory\UserFactory;
 use App\Tests\TestDouble\Shikimori\ShikimoriStub;
 
@@ -22,12 +21,12 @@ class SyncListHandlerTest extends MessageHandlerTestCase
 {
     public function testHandle(): void
     {
-        $user = UserFactory::new()->withLinkedAccount($accountId = 6610)->create();
+        $user = UserFactory::new()->withLinkedAccount($accountId = 6610, $accessToken = '123')->create();
         $message = new SyncList($user->getId());
 
         $shikimori = self::getService(ShikimoriStub::class);
         $shikimori->addRequest(
-            new AnimeRatesRequest(TokenFactory::DEFAULT_ACCESS_TOKEN, $accountId),
+            new AnimeRatesRequest($accessToken, $accountId),
             [
                 new AnimeRatesResponse(
                     id: $rateId = 123,

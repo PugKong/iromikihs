@@ -11,7 +11,6 @@ use App\Shikimori\Api\Auth\ExchangeCodeRequest;
 use App\Shikimori\Api\Auth\TokenResponse;
 use App\Shikimori\Api\Auth\WhoAmIRequest;
 use App\Shikimori\Api\Auth\WhoAmIResponse;
-use App\Tests\Factory\TokenFactory;
 use App\Tests\Factory\UserFactory;
 use App\Tests\TestDouble\Shikimori\ShikimoriStub;
 use App\Tests\Trait\TokenUtil;
@@ -48,14 +47,13 @@ final class LinkAccountHandlerTest extends MessageHandlerTestCase
 
         self::assertSame($accountId, $user->getAccountId());
 
-        $token = TokenFactory::find($user->getId());
         self::assertTokenData(
             new TokenData(
                 accessToken: $accessToken,
                 refreshToken: $refreshToken,
                 expiresAt: (new DateTimeImmutable('2007-01-03 03:04:05'))->getTimestamp(),
             ),
-            $token->object(),
+            $user->object(),
         );
     }
 }

@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Tests\Factory;
 
 use App\Entity\User;
+use App\Service\Shikimori\TokenData;
+use App\Service\Shikimori\TokenDataEncryptor;
+use DateTimeImmutable;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Zenstruck\Foundry\ModelFactory;
 use Zenstruck\Foundry\Proxy;
@@ -29,20 +32,28 @@ use Zenstruck\Foundry\Proxy;
  */
 final class UserFactory extends ModelFactory
 {
-    private UserPasswordHasherInterface $hasher;
+    public const DEFAULT_ACCESS_TOKEN = 'default access token';
 
-    public function __construct(UserPasswordHasherInterface $hasher)
+    private UserPasswordHasherInterface $hasher;
+    private TokenDataEncryptor $tokenEncryptor;
+
+    public function __construct(UserPasswordHasherInterface $hasher, TokenDataEncryptor $tokenEncryptor)
     {
         $this->hasher = $hasher;
+        $this->tokenEncryptor = $tokenEncryptor;
 
         parent::__construct();
     }
 
-    public function withLinkedAccount(int $accountId = 6610): self
+    public function withLinkedAccount(int $accountId = 6610, string $accessToken = null): self
     {
         return $this->addState([
             'accountId' => $accountId,
-            'token' => TokenFactory::new(),
+            'token' => $this->tokenEncryptor->encrypt(new TokenData(
+                accessToken: $accessToken ?? self::DEFAULT_ACCESS_TOKEN,
+                refreshToken: 'default refresh token',
+                expiresAt: (new DateTimeImmutable('+1 year'))->getTimestamp(),
+            )),
         ]);
     }
 

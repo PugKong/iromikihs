@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service\Shikimori;
 
-use App\Entity\Token;
 use App\Entity\User;
-use App\Repository\TokenRepository;
+use App\Repository\UserRepository;
 use App\Shikimori\Api\Auth\RefreshTokenRequest;
 use App\Shikimori\Api\Auth\TokenResponse;
 use App\Shikimori\Client\Shikimori;
@@ -16,58 +15,52 @@ use RuntimeException;
 final readonly class TokenStorage
 {
     private ClockInterface $clock;
-    private TokenRepository $tokens;
+    private UserRepository $users;
     private Shikimori $shikimori;
     private TokenDataEncryptor $tokenEncryptor;
 
     public function __construct(
         ClockInterface $clock,
-        TokenRepository $tokens,
+        UserRepository $users,
         Shikimori $shikimori,
         TokenDataEncryptor $tokenEncryptor,
     ) {
         $this->clock = $clock;
-        $this->tokens = $tokens;
+        $this->users = $users;
         $this->shikimori = $shikimori;
         $this->tokenEncryptor = $tokenEncryptor;
     }
 
     public function store(User $user, TokenResponse $data): void
     {
-        $token = $this->tokens->find($user);
-        if (null === $token) {
-            $token = new Token();
-            $token->setUser($user);
-        }
-
-        $this->storeResponse($token, $data);
+        $this->storeResponse($user, $data);
     }
 
     public function retrieve(User $user): string
     {
-        $token = $this->tokens->find($user->getId());
+        $token = $user->getToken();
         if (null === $token) {
             throw new RuntimeException(sprintf('Oh no, user %s has no token', $user->getId()));
         }
 
-        $data = $this->tokenEncryptor->decrypt($token->getData());
+        $data = $this->tokenEncryptor->decrypt($token);
         if ($data->expiresAt < ($this->clock->now()->getTimestamp() + 60)) {
             $request = new RefreshTokenRequest($data->refreshToken);
             $response = $this->shikimori->request($request);
 
-            $data = $this->storeResponse($token, $response);
+            $data = $this->storeResponse($user, $response);
         }
 
         return $data->accessToken;
     }
 
-    private function storeResponse(Token $token, TokenResponse $response): TokenData
+    private function storeResponse(User $user, TokenResponse $response): TokenData
     {
         $data = new TokenData($response->accessToken, $response->refreshToken, $response->expiresAt());
         $ciphertext = $this->tokenEncryptor->encrypt($data);
 
-        $token->setData($ciphertext);
-        $this->tokens->save($token);
+        $user->setToken($ciphertext);
+        $this->users->save($user);
 
         return $data;
     }

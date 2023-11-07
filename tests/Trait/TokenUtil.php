@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Trait;
 
-use App\Entity\Token;
+use App\Entity\User;
 use App\Service\Shikimori\TokenData;
 use App\Service\Shikimori\TokenDataEncryptor;
 use PHPUnit\Framework\Assert;
@@ -20,9 +20,11 @@ trait TokenUtil
      */
     abstract protected static function getService(string $name): object;
 
-    protected static function assertTokenData(TokenData $expected, Token $token): void
+    public static function assertTokenData(TokenData $expected, User $user): void
     {
-        $actual = self::getService(TokenDataEncryptor::class)->decrypt($token->getData());
+        $ciphertext = $user->getToken();
+        Assert::assertNotNull($ciphertext);
+        $actual = self::getService(TokenDataEncryptor::class)->decrypt($ciphertext);
 
         Assert::assertEquals($expected, $actual);
     }
