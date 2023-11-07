@@ -9,7 +9,6 @@ use App\Entity\AnimeRate;
 use App\Entity\User;
 use App\Repository\AnimeRateRepository;
 use App\Repository\AnimeRepository;
-use App\Shikimori\Api\User\AnimeItem;
 use App\Shikimori\Api\User\AnimeRatesResponse;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -38,7 +37,7 @@ final readonly class SyncUserList
 
         foreach ($data->rates as $rateData) {
             $anime = $this->animes->findOrNew($rateData->anime->id);
-            $this->setAnimeData($anime, $rateData->anime);
+            $anime->updateFromBaseData($rateData->anime);
             $this->entityManager->persist($anime);
 
             if (array_key_exists($rateData->id, $syncRates)) {
@@ -57,14 +56,6 @@ final readonly class SyncUserList
         }
 
         $this->entityManager->flush();
-    }
-
-    private function setAnimeData(Anime $anime, AnimeItem $data): void
-    {
-        $anime->setName($data->name);
-        $anime->setUrl($data->url);
-        $anime->setKind($data->kind);
-        $anime->setStatus($data->status);
     }
 
     private function setRateData(AnimeRate $rate, AnimeRatesResponse $data, User $user, Anime $anime): void

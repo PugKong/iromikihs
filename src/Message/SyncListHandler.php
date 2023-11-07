@@ -12,6 +12,7 @@ use App\Shikimori\Api\User\AnimeRatesRequest;
 use App\Shikimori\Client\Shikimori;
 use RuntimeException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 #[AsMessageHandler]
 final readonly class SyncListHandler
@@ -20,17 +21,20 @@ final readonly class SyncListHandler
     private TokenStorage $tokenStorage;
     private Shikimori $shikimori;
     private SyncUserList $syncUserList;
+    private MessageBusInterface $bus;
 
     public function __construct(
         UserRepository $users,
         TokenStorage $tokenStorage,
         Shikimori $shikimori,
         SyncUserList $syncUserList,
+        MessageBusInterface $bus,
     ) {
         $this->users = $users;
         $this->tokenStorage = $tokenStorage;
         $this->shikimori = $shikimori;
         $this->syncUserList = $syncUserList;
+        $this->bus = $bus;
     }
 
     public function __invoke(SyncList $message): void
@@ -50,5 +54,7 @@ final readonly class SyncListHandler
         $rates = $this->shikimori->request($request);
 
         ($this->syncUserList)(new SyncUserListData($user, $rates));
+
+        $this->bus->dispatch(new SyncSeries($message->userId));
     }
 }

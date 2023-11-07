@@ -12,7 +12,7 @@ use App\Shikimori\Api\Auth\TokenResponse;
 use App\Shikimori\Api\Auth\WhoAmIRequest;
 use App\Shikimori\Api\Auth\WhoAmIResponse;
 use App\Tests\Factory\UserFactory;
-use App\Tests\TestDouble\Shikimori\ShikimoriStub;
+use App\Tests\TestDouble\Shikimori\ShikimoriSpy;
 use App\Tests\Trait\TokenUtil;
 use DateTimeImmutable;
 use Symfony\Component\Clock\Test\ClockSensitiveTrait;
@@ -26,7 +26,7 @@ final class LinkAccountHandlerTest extends MessageHandlerTestCase
     {
         $user = UserFactory::createOne();
 
-        $shikimori = self::getService(ShikimoriStub::class);
+        $shikimori = self::getService(ShikimoriSpy::class);
         $shikimori->addRequest(
             new ExchangeCodeRequest($code = 'code'),
             new TokenResponse(

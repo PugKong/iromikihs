@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Entity\Anime;
 use App\Entity\AnimeRate;
 use App\Entity\User;
+use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -57,5 +59,28 @@ class AnimeRateRepository extends ServiceEntityRepository
         ;
 
         return $result;
+    }
+
+    public function findNextAnimeToSyncSeriesByUser(User $user): ?Anime
+    {
+        /** @var AnimeRate|null $result */
+        $result = $this
+            ->createQueryBuilder('r')
+            ->join('r.anime', 'a')
+            ->leftJoin('a.series', 's')
+            ->andWhere('r.user = :user')
+            ->setParameter('user', $user)
+            ->andWhere('s IS NULL OR s.updatedAt < :outdated')
+            ->setParameter('outdated', new DateTimeImmutable('-1 month'))
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+
+        if (null === $result) {
+            return null;
+        }
+
+        return $result->getAnime();
     }
 }

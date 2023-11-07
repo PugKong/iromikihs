@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace App\Tests\Shikimori\Api\User;
 
-use App\Shikimori\Api\Enum\Kind;
-use App\Shikimori\Api\Enum\Status;
 use App\Shikimori\Api\Enum\UserAnimeStatus;
-use App\Shikimori\Api\User\AnimeItem;
 use App\Shikimori\Api\User\AnimeRatesRequest;
 use App\Shikimori\Api\User\AnimeRatesResponse;
+use App\Shikimori\Api\User\AnimeRatesResponseAnimeItem;
 use App\Tests\Shikimori\ShikimoriTestCase;
+use App\Tests\Trait\BaseAnimeDataUtil;
 
 final class AnimeRatesRequestTest extends ShikimoriTestCase
 {
+    use BaseAnimeDataUtil;
+
     public function testRequest(): void
     {
         $request = new AnimeRatesRequest($token = 'a_token', 6610);
@@ -22,25 +23,13 @@ final class AnimeRatesRequestTest extends ShikimoriTestCase
                 id: 100,
                 score: 6,
                 status: UserAnimeStatus::COMPLETED,
-                anime: new AnimeItem(
-                    id: 1,
-                    name: 'anime 1',
-                    url: '/animes/1',
-                    kind: Kind::TV,
-                    status: Status::RELEASED,
-                ),
+                anime: self::createAnimeItem(AnimeRatesResponseAnimeItem::class, 1),
             ),
             new AnimeRatesResponse(
                 id: 200,
                 score: 7,
                 status: UserAnimeStatus::WATCHING,
-                anime: new AnimeItem(
-                    id: 2,
-                    name: 'anime 2',
-                    url: '/animes/2',
-                    kind: Kind::TV,
-                    status: Status::ONGOING,
-                ),
+                anime: self::createAnimeItem(AnimeRatesResponseAnimeItem::class, 2),
             ),
         ];
         $response = [
@@ -52,7 +41,7 @@ final class AnimeRatesRequestTest extends ShikimoriTestCase
                     'id' => $expected[0]->anime->id,
                     'name' => $expected[0]->anime->name,
                     'url' => $expected[0]->anime->url,
-                    'kind' => $expected[0]->anime->kind->value,
+                    'kind' => $expected[0]->anime->kind?->value,
                     'status' => $expected[0]->anime->status->value,
                 ],
             ],
@@ -64,7 +53,7 @@ final class AnimeRatesRequestTest extends ShikimoriTestCase
                     'id' => $expected[1]->anime->id,
                     'name' => $expected[1]->anime->name,
                     'url' => $expected[1]->anime->url,
-                    'kind' => $expected[1]->anime->kind->value,
+                    'kind' => $expected[1]->anime->kind?->value,
                     'status' => $expected[1]->anime->status->value,
                 ],
             ],

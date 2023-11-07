@@ -6,25 +6,29 @@ namespace App\Tests\Message;
 
 use App\Message\SyncList;
 use App\Message\SyncListHandler;
-use App\Shikimori\Api\Enum\Kind;
-use App\Shikimori\Api\Enum\Status;
+use App\Message\SyncSeries;
 use App\Shikimori\Api\Enum\UserAnimeStatus;
-use App\Shikimori\Api\User\AnimeItem;
 use App\Shikimori\Api\User\AnimeRatesRequest;
 use App\Shikimori\Api\User\AnimeRatesResponse;
+use App\Shikimori\Api\User\AnimeRatesResponseAnimeItem;
 use App\Tests\Factory\AnimeFactory;
 use App\Tests\Factory\AnimeRateFactory;
 use App\Tests\Factory\UserFactory;
-use App\Tests\TestDouble\Shikimori\ShikimoriStub;
+use App\Tests\TestDouble\Shikimori\ShikimoriSpy;
+use App\Tests\Trait\BaseAnimeDataUtil;
+use Zenstruck\Messenger\Test\InteractsWithMessenger;
 
 class SyncListHandlerTest extends MessageHandlerTestCase
 {
+    use BaseAnimeDataUtil;
+    use InteractsWithMessenger;
+
     public function testHandle(): void
     {
         $user = UserFactory::new()->withLinkedAccount($accountId = 6610, $accessToken = '123')->create();
         $message = new SyncList($user->getId());
 
-        $shikimori = self::getService(ShikimoriStub::class);
+        $shikimori = self::getService(ShikimoriSpy::class);
         $shikimori->addRequest(
             new AnimeRatesRequest($accessToken, $accountId),
             [
@@ -32,13 +36,7 @@ class SyncListHandlerTest extends MessageHandlerTestCase
                     id: $rateId = 123,
                     score: $rateScore = 6,
                     status: $rateStatus = UserAnimeStatus::WATCHING,
-                    anime: new AnimeItem(
-                        id: $animeId = 456,
-                        name: $animeName = 'The anime',
-                        url: $animeUrl = '/animes/456',
-                        kind: $animeKind = Kind::MOVIE,
-                        status: $animeStatus = Status::ONGOING,
-                    ),
+                    anime: $item = self::createAnimeItem(AnimeRatesResponseAnimeItem::class, $animeId = 456),
                 ),
             ],
         );
@@ -47,14 +45,15 @@ class SyncListHandlerTest extends MessageHandlerTestCase
         ($handler)($message);
 
         $anime = AnimeFactory::find($animeId);
-        self::assertSame($animeName, $anime->getName());
-        self::assertSame($animeUrl, $anime->getUrl());
-        self::assertSame($animeKind, $anime->getKind());
-        self::assertSame($animeStatus, $anime->getStatus());
+        self::assertBaseItemDataEqualsAnimeData($item, $anime->object());
 
         $rate = AnimeRateFactory::find($rateId);
-        self::assertTrue($user->getId()->equals($rate->getUser()->getId()));
+        self::assertEquals($user->getId(), $rate->getUser()->getId());
         self::assertSame($rateScore, $rate->getScore());
         self::assertSame($rateStatus, $rate->getStatus());
+
+        $messages = $this->transport('async')->queue()->messages(SyncSeries::class);
+        self::assertCount(1, $messages);
+        self::assertEquals($user->getId(), $messages[0]->userId);
     }
 }

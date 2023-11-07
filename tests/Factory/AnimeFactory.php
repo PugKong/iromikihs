@@ -34,6 +34,7 @@ final class AnimeFactory extends ModelFactory
     {
         return [
             'id' => self::faker()->unique()->numberBetween(),
+            'series' => null,
             'name' => self::faker()->text(),
             'url' => self::faker()->text(),
             'kind' => self::faker()->randomElement(Kind::cases()),

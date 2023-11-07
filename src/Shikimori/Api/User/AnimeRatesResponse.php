@@ -12,7 +12,7 @@ final readonly class AnimeRatesResponse
         public int $id,
         public int $score,
         public UserAnimeStatus $status,
-        public AnimeItem $anime,
+        public AnimeRatesResponseAnimeItem $anime,
     ) {
     }
 }

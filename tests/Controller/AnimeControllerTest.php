@@ -111,7 +111,7 @@ final class AnimeControllerTest extends ControllerTestCase
 
         $messages = $this->transport('async')->queue()->messages(SyncList::class);
         self::assertCount(1, $messages);
-        self::assertTrue($user->getId()->equals($messages[0]->userId));
+        self::assertEquals($user->getId(), $messages[0]->userId);
 
         self::getClient()->followRedirect();
         self::assertSelectorTextSame('.flash-notice', 'Your list will be synced soon.');

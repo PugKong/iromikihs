@@ -11,7 +11,7 @@ use App\Shikimori\Api\Auth\RefreshTokenRequest;
 use App\Shikimori\Api\Auth\TokenResponse;
 use App\Tests\Factory\UserFactory;
 use App\Tests\Service\ServiceTestCase;
-use App\Tests\TestDouble\Shikimori\ShikimoriStub;
+use App\Tests\TestDouble\Shikimori\ShikimoriSpy;
 use App\Tests\Trait\TokenUtil;
 use DateTimeImmutable;
 use Symfony\Component\Clock\Test\ClockSensitiveTrait;
@@ -99,7 +99,7 @@ final class TokenStorageTest extends ServiceTestCase
             )),
         ]);
 
-        $shikimori = self::getService(ShikimoriStub::class);
+        $shikimori = self::getService(ShikimoriSpy::class);
         $shikimori->addRequest(
             new RefreshTokenRequest($oldRefreshToken),
             new TokenResponse(

@@ -7,14 +7,19 @@ namespace App\Tests\TestDouble\Shikimori;
 use App\Shikimori\Client\ListRequest;
 use App\Shikimori\Client\Request;
 use App\Shikimori\Client\Shikimori;
+use PHPUnit\Framework\Assert;
 use RuntimeException;
 
-final class ShikimoriStub implements Shikimori
+final class ShikimoriSpy implements Shikimori
 {
     /**
      * @var array<array{0: Request<object>, 1: object|array<object>}>
      */
     private array $requestResponsePairs = [];
+    /**
+     * @var Request<object>[]
+     */
+    private array $requests = [];
 
     /**
      * @phpstan-template T of object
@@ -29,6 +34,8 @@ final class ShikimoriStub implements Shikimori
 
     public function request(Request $request): object|array
     {
+        $this->requests[] = $request;
+
         foreach ($this->requestResponsePairs as $pair) {
             if ($request != $pair[0]) {
                 continue;
@@ -39,5 +46,10 @@ final class ShikimoriStub implements Shikimori
         }
 
         throw new RuntimeException(sprintf('Oh no, request %s not found', $request::class));
+    }
+
+    public function assertCalls(int $expected): void
+    {
+        Assert::assertCount($expected, $this->requests);
     }
 }

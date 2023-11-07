@@ -65,7 +65,7 @@ final class ProfileControllerTest extends ControllerTestCase
 
         $messages = $this->transport('async')->queue()->messages(LinkAccount::class);
         self::assertCount(1, $messages);
-        self::assertTrue($user->getId()->equals($messages[0]->userId));
+        self::assertEquals($user->getId(), $messages[0]->userId);
         self::assertSame('the_code', $messages[0]->code);
 
         self::getClient()->followRedirect();
