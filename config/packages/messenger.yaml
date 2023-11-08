@@ -19,12 +19,10 @@ framework:
       App\Message\LinkAccount: async
       App\Message\SyncList: async
       App\Message\SyncSeries: async
+      App\Message\SyncUserSeries: async
       Symfony\Component\Mailer\Messenger\SendEmailMessage: async
       Symfony\Component\Notifier\Message\ChatMessage: async
       Symfony\Component\Notifier\Message\SmsMessage: async
-
-      # Route your messages to the transports
-      # 'App\Message\YourMessage': async
 
 when@test:
   framework:

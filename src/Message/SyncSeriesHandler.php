@@ -43,6 +43,8 @@ final readonly class SyncSeriesHandler
 
         $anime = $this->rates->findNextAnimeToSyncSeriesByUser($user);
         if (null === $anime) {
+            $this->bus->dispatch(new SyncUserSeries($message->userId));
+
             return;
         }
 

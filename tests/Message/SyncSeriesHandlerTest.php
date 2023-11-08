@@ -6,6 +6,7 @@ namespace App\Tests\Message;
 
 use App\Message\SyncSeries;
 use App\Message\SyncSeriesHandler;
+use App\Message\SyncUserSeries;
 use App\Shikimori\Api\Anime\ItemRequest;
 use App\Shikimori\Api\Anime\ItemResponse;
 use App\Shikimori\Api\Anime\RelatedRequest;
@@ -49,7 +50,7 @@ final class SyncSeriesHandlerTest extends MessageHandlerTestCase
         self::assertEquals($user->getId(), $messages[0]->userId);
     }
 
-    public function testStopRecursionWhenNothingToSync(): void
+    public function testStartUserSeriesSyncWhenFullySynced(): void
     {
         $user = UserFactory::new()->withLinkedAccount()->create();
 
@@ -58,5 +59,8 @@ final class SyncSeriesHandlerTest extends MessageHandlerTestCase
 
         $messages = $this->transport('async')->queue()->messages(SyncSeries::class);
         self::assertCount(0, $messages);
+
+        $messages = $this->transport('async')->queue()->messages(SyncUserSeries::class);
+        self::assertCount(1, $messages);
     }
 }
