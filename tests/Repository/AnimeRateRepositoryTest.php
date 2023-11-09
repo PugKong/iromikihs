@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Tests\Repository;
 
 use App\Repository\AnimeRateRepository;
-use App\Shikimori\Api\Enum\UserAnimeStatus;
 use App\Tests\Factory\AnimeFactory;
 use App\Tests\Factory\AnimeRateFactory;
 use App\Tests\Factory\SeriesFactory;
@@ -70,31 +69,5 @@ final class AnimeRateRepositoryTest extends RepositoryTestCase
 
         $userSeries = $repository->findSeriesIdsByUser(UserFactory::createOne()->object());
         self::assertEquals([], $userSeries);
-    }
-
-    public function testCountByUserAndSeries(): void
-    {
-        $user = UserFactory::createOne();
-        $series = SeriesFactory::createOne();
-        $anime1 = AnimeFactory::createOne(['series' => $series]);
-        $anime2 = AnimeFactory::createOne(['series' => $series]);
-        $anime3 = AnimeFactory::createOne(['series' => $series]);
-        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime1, 'status' => UserAnimeStatus::WATCHING]);
-        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime2, 'status' => UserAnimeStatus::COMPLETED]);
-        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime3, 'status' => UserAnimeStatus::PLANNED]);
-
-        $repository = self::getService(AnimeRateRepository::class);
-        $actual = $repository->countByUserAndSeries($user->object(), $series->object());
-        self::assertSame(3, $actual);
-
-        $actual = $repository->countByUserAndSeries(
-            $user->object(),
-            $series->object(),
-            statuses: [UserAnimeStatus::WATCHING, UserAnimeStatus::COMPLETED],
-        );
-        self::assertSame(2, $actual);
-
-        $actual = $repository->countByUserAndSeries(UserFactory::createOne()->object(), $series->object());
-        self::assertSame(0, $actual);
     }
 }

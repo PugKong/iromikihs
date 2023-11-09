@@ -6,9 +6,7 @@ namespace App\Repository;
 
 use App\Entity\Anime;
 use App\Entity\AnimeRate;
-use App\Entity\Series;
 use App\Entity\User;
-use App\Shikimori\Api\Enum\UserAnimeStatus;
 use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -105,31 +103,5 @@ class AnimeRateRepository extends ServiceEntityRepository
         ;
 
         return array_column($result, 'id');
-    }
-
-    /**
-     * @param UserAnimeStatus[]|null $statuses
-     */
-    public function countByUserAndSeries(User $user, Series $series, array $statuses = null): int
-    {
-        $queryBuilder = $this
-            ->createQueryBuilder('r')
-            ->select('COUNT(a) as animeCount')
-            ->join('r.anime', 'a')
-            ->andWhere('r.user = :user')
-            ->setParameter('user', $user)
-            ->andWhere('a.series = :series')
-            ->setParameter('series', $series)
-        ;
-        if (null !== $statuses) {
-            $queryBuilder
-                ->andWhere('r.status IN (:statues)')
-                ->setParameter('statues', $statuses)
-            ;
-        }
-        /** @var array{animeCount: int} $result */
-        $result = $queryBuilder->getQuery()->getSingleResult();
-
-        return $result['animeCount'];
     }
 }

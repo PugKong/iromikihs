@@ -26,7 +26,7 @@ final readonly class SyncAnimeSeries
     /**
      * @param BaseAnimeData[] $animesData
      */
-    public function __invoke(array $animesData): void
+    public function __invoke(string $name, array $animesData): void
     {
         $series = null;
         $animes = [];
@@ -49,6 +49,7 @@ final readonly class SyncAnimeSeries
             $this->entityManager->persist($anime);
         }
 
+        $series->setName($name);
         $series->setUpdatedAt($this->clock->now());
         $this->entityManager->persist($series);
 

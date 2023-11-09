@@ -4,37 +4,39 @@ declare(strict_types=1);
 
 namespace App\Service\Anime;
 
+use App\Entity\SeriesState;
 use App\Entity\User;
-use App\Entity\UserSeriesState;
 use App\Repository\AnimeRateRepository;
 use App\Repository\AnimeRepository;
+use App\Repository\SeriesRateRepository;
 use App\Repository\SeriesRepository;
-use App\Repository\SeriesStateRepository;
 use App\Shikimori\Api\Enum\Status;
 use App\Shikimori\Api\Enum\UserAnimeStatus;
 
+use function in_array;
+
 final readonly class SyncUserSeriesList
 {
-    private AnimeRateRepository $rates;
+    private AnimeRateRepository $animeRates;
     private SeriesRepository $series;
     private AnimeRepository $animes;
-    private SeriesStateRepository $userSeries;
+    private SeriesRateRepository $seriesRates;
 
     public function __construct(
-        AnimeRateRepository $rates,
+        AnimeRateRepository $animeRates,
         SeriesRepository $series,
         AnimeRepository $animes,
-        SeriesStateRepository $userSeries,
+        SeriesRateRepository $seriesRates,
     ) {
-        $this->rates = $rates;
+        $this->animeRates = $animeRates;
         $this->series = $series;
         $this->animes = $animes;
-        $this->userSeries = $userSeries;
+        $this->seriesRates = $seriesRates;
     }
 
     public function __invoke(User $user): void
     {
-        $seriesIds = $this->rates->findSeriesIdsByUser($user);
+        $seriesIds = $this->animeRates->findSeriesIdsByUser($user);
         $syncSeries = $this->series->findBy(['id' => $seriesIds]);
 
         $saveUserSeries = [];
@@ -44,30 +46,45 @@ final readonly class SyncUserSeriesList
                 continue;
             }
 
-            $completedOrWatchingCount = $this->rates->countByUserAndSeries(
-                $user,
-                $series,
-                statuses: [
+            $animes = $this->animes->findBy(['series' => $series]);
+            $rates = $this->animeRates->findBy(['user' => $user, 'anime' => $animes]);
+
+            $completedOrWatchingCount = 0;
+            $droppedCount = 0;
+            $scoreSum = 0;
+            $scoreCount = 0;
+            foreach ($rates as $rate) {
+                if (in_array($rate->getStatus(), [
                     UserAnimeStatus::COMPLETED,
                     UserAnimeStatus::WATCHING,
                     UserAnimeStatus::REWATCHING,
-                ],
-            );
+                ])) {
+                    ++$completedOrWatchingCount;
+                }
+                if (UserAnimeStatus::DROPPED === $rate->getStatus()) {
+                    ++$droppedCount;
+                }
+                if (0 !== $rate->getScore()) {
+                    ++$scoreCount;
+                    $scoreSum += $rate->getScore();
+                }
+            }
+
             if (0 === $completedOrWatchingCount) {
                 continue;
             }
 
-            $droppedCount = $this->rates->countByUserAndSeries($user, $series, statuses: [UserAnimeStatus::DROPPED]);
-            $userSeries = $this->userSeries->findOrNew($user, $series);
+            $userSeries = $this->seriesRates->findOrNew($user, $series);
+            $userSeries->setScore($scoreSum / $scoreCount);
             if ($releasedCount === ($completedOrWatchingCount + $droppedCount)) {
-                $userSeries->setState(UserSeriesState::COMPLETE);
+                $userSeries->setState(SeriesState::COMPLETE);
             } else {
-                $userSeries->setState(UserSeriesState::INCOMPLETE);
+                $userSeries->setState(SeriesState::INCOMPLETE);
             }
 
             $saveUserSeries[] = $userSeries;
         }
 
-        $this->userSeries->save(...$saveUserSeries);
+        $this->seriesRates->save(...$saveUserSeries);
     }
 }

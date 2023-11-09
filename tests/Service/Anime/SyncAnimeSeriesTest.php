@@ -30,11 +30,12 @@ final class SyncAnimeSeriesTest extends ServiceTestCase
         ];
 
         $service = self::getService(SyncAnimeSeries::class);
-        ($service)($animes);
+        ($service)($name = 'The name', $animes);
 
         $series = SeriesFactory::all();
         self::assertCount(1, $series);
         $series = $series[0];
+        self::assertSame($name, $series->getName());
         self::assertEquals($updatedAt, $series->getUpdatedAt());
 
         $firstAnime = AnimeFactory::find($firstId);
@@ -50,7 +51,10 @@ final class SyncAnimeSeriesTest extends ServiceTestCase
     {
         self::mockTime($updatedAt = new DateTimeImmutable('2007-01-02 03:04:05'));
 
-        $series = SeriesFactory::createOne(['updated_at' => new DateTimeImmutable('2006-01-02 03:04:05')]);
+        $series = SeriesFactory::createOne([
+            'name' => 'change me',
+            'updated_at' => new DateTimeImmutable('2006-01-02 03:04:05'),
+        ]);
 
         $animes = [
             $firstItem = $this->createAnimeItem(BaseAnimeDataStub::class, $firstId = 10),
@@ -66,9 +70,10 @@ final class SyncAnimeSeriesTest extends ServiceTestCase
         ]);
 
         $service = self::getService(SyncAnimeSeries::class);
-        ($service)($animes);
+        ($service)($name = 'The name', $animes);
 
         self::assertCount(1, SeriesFactory::all());
+        self::assertSame($name, $series->getName());
         self::assertEquals($updatedAt, $series->getUpdatedAt());
 
         $firstAnime = AnimeFactory::find($firstId);

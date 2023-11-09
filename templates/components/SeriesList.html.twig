@@ -1,0 +1,38 @@
+<section class="series-list">
+  {% for series in this.series %}
+    <div>
+      <h2>{{ series.name }}</h2>
+      <p>Score: {{ this.seriesRate(series).score|round(2) }}</p>
+      <ul>
+        {% for anime in this.animesBySeries(series) %}
+          <li class="series-list-item">
+            {% if anime.kind is not null %}
+              [{{ anime.kind.value }}]
+            {% endif %}
+            {% if anime.status.value != 'released' %}
+              [{{ anime.status.value }}]
+            {% endif %}
+
+            {% set animeRate = this.animeRate(anime) %}
+            <a href="{{ this.url(anime) }}">
+              {% if animeRate is null or animeRate.status.value != 'completed' %}
+                {{ anime.name }}
+              {% else %}
+                <strong>{{ anime.name }}</strong>
+              {% endif %}
+            </a>
+
+            {% if animeRate is not null %}
+              {% if animeRate.score != 0 %}
+                [{{ animeRate.score }}]
+              {% endif %}
+              {% if animeRate.status.value != 'completed' %}
+                [{{ animeRate.status.value }}]
+              {% endif %}
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endfor %}
+</section>

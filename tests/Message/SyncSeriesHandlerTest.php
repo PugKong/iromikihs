@@ -42,7 +42,9 @@ final class SyncSeriesHandlerTest extends MessageHandlerTestCase
         $handler = self::getService(SyncSeriesHandler::class);
         ($handler)(new SyncSeries($user->getId()));
 
-        self::assertCount(1, SeriesFactory::all());
+        $series = SeriesFactory::all();
+        self::assertCount(1, $series);
+        self::assertSame($anime->getName(), $series[0]->getName());
         self::assertBaseItemDataEqualsAnimeData($item, $anime->object());
 
         $messages = $this->transport('async')->queue()->messages(SyncSeries::class);

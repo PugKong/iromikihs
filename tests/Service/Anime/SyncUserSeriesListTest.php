@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Tests\Service\Anime;
 
-use App\Entity\UserSeriesState;
+use App\Entity\SeriesState;
 use App\Service\Anime\SyncUserSeriesList;
 use App\Shikimori\Api\Enum\Status;
 use App\Shikimori\Api\Enum\UserAnimeStatus;
 use App\Tests\Factory\AnimeFactory;
 use App\Tests\Factory\AnimeRateFactory;
 use App\Tests\Factory\SeriesFactory;
-use App\Tests\Factory\SeriesStateFactory;
+use App\Tests\Factory\SeriesRateFactory;
 use App\Tests\Factory\UserFactory;
 use App\Tests\Service\ServiceTestCase;
 
@@ -53,9 +53,9 @@ final class SyncUserSeriesListTest extends ServiceTestCase
         $service = self::getService(SyncUserSeriesList::class);
         ($service)($user->object());
 
-        $userSeries = SeriesStateFactory::find(['series' => $series]);
-        self::assertEquals($user->object(), $userSeries->getUser());
-        self::assertSame(UserSeriesState::INCOMPLETE, $userSeries->getState());
+        $seriesRate = SeriesRateFactory::find(['series' => $series]);
+        self::assertEquals($user->object(), $seriesRate->getUser());
+        self::assertSame(SeriesState::INCOMPLETE, $seriesRate->getState());
     }
 
     /**
@@ -73,9 +73,9 @@ final class SyncUserSeriesListTest extends ServiceTestCase
         $service = self::getService(SyncUserSeriesList::class);
         ($service)($user->object());
 
-        $userSeries = SeriesStateFactory::find(['series' => $series]);
-        self::assertEquals($user->object(), $userSeries->getUser());
-        self::assertSame(UserSeriesState::COMPLETE, $userSeries->getState());
+        $seriesRate = SeriesRateFactory::find(['series' => $series]);
+        self::assertEquals($user->object(), $seriesRate->getUser());
+        self::assertSame(SeriesState::COMPLETE, $seriesRate->getState());
     }
 
     /**
@@ -93,8 +93,8 @@ final class SyncUserSeriesListTest extends ServiceTestCase
         $service = self::getService(SyncUserSeriesList::class);
         ($service)($user->object());
 
-        $userSeries = SeriesStateFactory::all();
-        self::assertCount(0, $userSeries);
+        $seriesRates = SeriesRateFactory::all();
+        self::assertCount(0, $seriesRates);
     }
 
     public static function dontCreateUserSeriesWhenOnlyOneOrLessAnimesAreReleasedProvider(): array
@@ -117,8 +117,8 @@ final class SyncUserSeriesListTest extends ServiceTestCase
         $service = self::getService(SyncUserSeriesList::class);
         ($service)($user->object());
 
-        $userSeries = SeriesStateFactory::all();
-        self::assertCount(0, $userSeries);
+        $seriesRates = SeriesRateFactory::all();
+        self::assertCount(0, $seriesRates);
     }
 
     /**
@@ -134,16 +134,16 @@ final class SyncUserSeriesListTest extends ServiceTestCase
         if (null !== $status) {
             AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime2, 'status' => $status]);
         }
-        $userSeries = SeriesStateFactory::createOne([
+        $seriesRate = SeriesRateFactory::createOne([
             'user' => $user,
             'series' => $series,
-            'state' => UserSeriesState::COMPLETE,
+            'state' => SeriesState::COMPLETE,
         ]);
 
         $service = self::getService(SyncUserSeriesList::class);
         ($service)($user->object());
 
-        self::assertSame(UserSeriesState::INCOMPLETE, $userSeries->getState());
+        self::assertSame(SeriesState::INCOMPLETE, $seriesRate->getState());
     }
 
     /**
@@ -157,15 +157,41 @@ final class SyncUserSeriesListTest extends ServiceTestCase
         $anime2 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
         AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime1, 'status' => UserAnimeStatus::COMPLETED]);
         AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime2, 'status' => $status]);
-        $userSeries = SeriesStateFactory::createOne([
+        $seriesRate = SeriesRateFactory::createOne([
             'user' => $user,
             'series' => $series,
-            'state' => UserSeriesState::INCOMPLETE,
+            'state' => SeriesState::INCOMPLETE,
         ]);
 
         $service = self::getService(SyncUserSeriesList::class);
         ($service)($user->object());
 
-        self::assertSame(UserSeriesState::COMPLETE, $userSeries->getState());
+        self::assertSame(SeriesState::COMPLETE, $seriesRate->getState());
+    }
+
+    public function testCalculateScore(): void
+    {
+        $user = UserFactory::createOne();
+        $series = SeriesFactory::createOne();
+        $anime1 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
+        $anime2 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
+        AnimeRateFactory::createOne([
+            'user' => $user,
+            'anime' => $anime1,
+            'status' => UserAnimeStatus::COMPLETED,
+            'score' => 5,
+        ]);
+        AnimeRateFactory::createOne([
+            'user' => $user,
+            'anime' => $anime2,
+            'status' => UserAnimeStatus::COMPLETED,
+            'score' => 6,
+        ]);
+
+        $service = self::getService(SyncUserSeriesList::class);
+        ($service)($user->object());
+
+        $seriesRate = SeriesRateFactory::find(['series' => $series]);
+        self::assertSame(5.5, $seriesRate->getScore());
     }
 }

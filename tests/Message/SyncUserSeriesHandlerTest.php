@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Message;
 
-use App\Entity\UserSeriesState;
+use App\Entity\SeriesState;
 use App\Message\SyncUserSeries;
 use App\Message\SyncUserSeriesHandler;
 use App\Shikimori\Api\Enum\Status;
@@ -12,7 +12,7 @@ use App\Shikimori\Api\Enum\UserAnimeStatus;
 use App\Tests\Factory\AnimeFactory;
 use App\Tests\Factory\AnimeRateFactory;
 use App\Tests\Factory\SeriesFactory;
-use App\Tests\Factory\SeriesStateFactory;
+use App\Tests\Factory\SeriesRateFactory;
 use App\Tests\Factory\UserFactory;
 
 final class SyncUserSeriesHandlerTest extends MessageHandlerTestCase
@@ -29,8 +29,8 @@ final class SyncUserSeriesHandlerTest extends MessageHandlerTestCase
         $handler = self::getService(SyncUserSeriesHandler::class);
         ($handler)(new SyncUserSeries($user->getId()));
 
-        $userSeries = SeriesStateFactory::find(['series' => $series]);
-        self::assertEquals($user->object(), $userSeries->getUser());
-        self::assertSame(UserSeriesState::INCOMPLETE, $userSeries->getState());
+        $seriesRate = SeriesRateFactory::find(['series' => $series]);
+        self::assertEquals($user->object(), $seriesRate->getUser());
+        self::assertSame(SeriesState::INCOMPLETE, $seriesRate->getState());
     }
 }

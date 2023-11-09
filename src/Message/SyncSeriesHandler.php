@@ -48,8 +48,8 @@ final readonly class SyncSeriesHandler
             return;
         }
 
-        $animes = ($this->seriesFetcher)($user, $anime->getId());
-        ($this->syncAnimeSeries)($animes);
+        $result = ($this->seriesFetcher)($user, $anime->getId());
+        ($this->syncAnimeSeries)($result->seriesName, $result->animes);
 
         $this->bus->dispatch($message);
     }

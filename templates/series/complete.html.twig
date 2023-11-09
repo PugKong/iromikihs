@@ -1,0 +1,7 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Complete series{% endblock %}
+
+{% block body %}
+  <twig:SeriesList user="{{ app.user }}" state="complete" />
+{% endblock %}

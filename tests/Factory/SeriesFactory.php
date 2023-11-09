@@ -32,6 +32,7 @@ final class SeriesFactory extends ModelFactory
     protected function getDefaults(): array
     {
         return [
+            'name' => self::faker()->text(),
             'updatedAt' => DateTimeImmutable::createFromMutable(self::faker()->dateTimeThisDecade()),
         ];
     }

@@ -65,11 +65,13 @@ final class AnimeSeriesFetcherTest extends ServiceTestCase
         ]);
 
         $fetcher = self::getService(AnimeSeriesFetcher::class);
-        $actual = ($fetcher)($user->object(), $selectInitialId([$firstId, $secondId, $thirdId]));
+        $result = ($fetcher)($user->object(), $selectInitialId([$firstId, $secondId, $thirdId]));
 
+        self::assertSame($firstRelated->name, $result->seriesName);
         $shikimori->assertCalls(4);
 
         // due to clown fiesta I did with BaseAnimeData, let's do some morning work-out
+        $actual = $result->animes;
         $expected = [$firstRelated, $secondRelated, $thirdRelated];
         $cmp = fn (BaseAnimeData $a, BaseAnimeData $b) => $a->id <=> $b->id;
         usort($actual, $cmp);

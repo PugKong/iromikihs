@@ -19,6 +19,9 @@ class Series
     private UuidV7 $id;
 
     #[ORM\Column]
+    private string $name;
+
+    #[ORM\Column]
     private DateTimeImmutable $updatedAt;
 
     public function __construct()
@@ -29,6 +32,18 @@ class Series
     public function getId(): UuidV7
     {
         return $this->id;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+
+        return $this;
     }
 
     public function getUpdatedAt(): DateTimeImmutable
