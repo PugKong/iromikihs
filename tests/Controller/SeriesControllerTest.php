@@ -49,7 +49,7 @@ final class SeriesControllerTest extends ControllerTestCase
         $sections = self::getClient()->getCrawler()->filter('section.series-list');
         self::assertCount(1, $sections);
 
-        $listItems = $sections->first()->filter('li.series-list-item');
+        $listItems = $sections->first()->filter('div.series-list-item');
         self::assertCount(2, $listItems);
     }
 
@@ -68,12 +68,12 @@ final class SeriesControllerTest extends ControllerTestCase
             ->request('GET', '/series/complete')
         ;
         self::assertResponseIsSuccessful();
-        self::assertPageTitleContains('Complete series');
+        self::assertPageTitleContains('Completed series');
 
         $sections = self::getClient()->getCrawler()->filter('section.series-list');
         self::assertCount(1, $sections);
 
-        $listItems = $sections->first()->filter('li.series-list-item');
+        $listItems = $sections->first()->filter('div.series-list-item');
         self::assertCount(2, $listItems);
     }
 }

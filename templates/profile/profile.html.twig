@@ -1,15 +1,13 @@
-{% extends 'base.html.twig' %}
+{% extends 'app.html.twig' %}
 
 {% block title %}Profile{% endblock %}
 
-{% block body %}
-  {% for message in app.flashes('notice') %}
-    <div class="flash-notice">{{ message }}</div>
-  {% endfor %}
+{% block content %}
+  <twig:PageHeader>Profile</twig:PageHeader>
 
   <twig:LinkAccountSection />
 
   {% if app.user.linked %}
-    <div>Shikimori account id is {{ app.user.accountId }}</div>
+    <div class="mt-4">Shikimori account id is {{ app.user.accountId }}</div>
   {% endif %}
 {% endblock %}

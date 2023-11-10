@@ -50,7 +50,7 @@ final class AnimeController extends AbstractController
         return $this
             ->createFormBuilder()
             ->setAction($this->generateUrl('app_anime_sync'))
-            ->add('submit', SubmitType::class, ['label' => 'Sync list'])
+            ->add('submit', SubmitType::class, ['label' => 'Sync list', 'attr' => ['class' => 'btn btn-primary']])
             ->getForm()
         ;
     }

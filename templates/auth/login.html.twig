@@ -3,19 +3,32 @@
 {% block title %}Login{% endblock %}
 
 {% block body %}
-  {% if error %}
-    <div>{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-  {% endif %}
+  <main class="flex items-center justify-center min-h-screen">
+    <div class="bg-base-200 p-8 border border-primary">
+      <h1 class="text-2xl font-bold">Login to your account</h1>
 
-  <form action="{{ path('app_login') }}" method="post">
-    <label for="username">Username:</label>
-    <input type="text" id="username" name="_username" value="{{ last_username }}">
+      <form action="{{ path('app_login') }}" method="post">
+        <div class="mt-4">
+          <label for="username" class="block">Username</label>
+          <input type="text" name="_username" class="mt-2 input input-bordered" id="username"
+                 value="{{ last_username }}" />
+        </div>
 
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="_password">
+        <div class="mt-4">
+          <label for="password" class="block">Password</label>
+          <input type="password" name="_password" class="mt-2 input input-bordered" id="password" />
+        </div>
 
-    <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
-    <button type="submit">Login</button>
-  </form>
+        {% if error %}
+          <div class="mt-4 alert alert-error">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+        {% endif %}
+
+        <div class="mt-4">
+          <input type="submit" class="w-full btn btn-primary" value="Login" />
+        </div>
+      </form>
+    </div>
+  </main>
 {% endblock %}

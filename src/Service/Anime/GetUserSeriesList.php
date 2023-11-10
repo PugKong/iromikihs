@@ -36,7 +36,7 @@ final readonly class GetUserSeriesList
     {
         $seriesRates = $this->seriesRates->findBy(['user' => $user, 'state' => $state]);
         $seriesIds = $this->seriesRatesToSeriesIds($seriesRates);
-        $series = $this->series->findBy(['id' => $seriesIds]);
+        $series = $this->series->findBy(['id' => $seriesIds], ['name' => 'ASC']);
 
         $animes = $this->animes->findBy(['series' => $seriesIds], ['id' => 'ASC']);
         $animeRates = $this->animeRates->findBy(['user' => $user, 'anime' => $animes]);

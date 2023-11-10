@@ -93,7 +93,10 @@ final class AnimeControllerTest extends ControllerTestCase
 
         self::assertTableRowsCount('table.anime-list', $rates);
 
-        self::assertSame(2, self::dbCollector()->getQueryCount());
+        // 1 request to fetch user
+        // 2 requests to build nav bar
+        // 1 request to load page data
+        self::assertSame(4, self::dbCollector()->getQueryCount());
     }
 
     public function testSync(): void

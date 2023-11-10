@@ -1,0 +1,19 @@
+<nav class="navbar bg-base-300">
+  <div class="container mx-auto">
+    <a class="btn btn-ghost normal-case text-xl" href="/">Iromikihs</a>
+    <ul class="menu menu-horizontal">
+      {% for item in this.items %}
+        <li>
+          <a href="{{ path(item.route) }}"
+             class="{{ html_classes({'active': item.active}) }}"
+          >
+            {{ item.label }}
+            {% if item.count is defined %}
+              <span class="badge badge-accent">{{ item.count }}</span>
+            {% endif %}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</nav>

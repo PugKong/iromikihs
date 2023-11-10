@@ -13,6 +13,7 @@ use App\Entity\User;
 use App\Service\Anime\GetUserSeriesList;
 use App\Service\Anime\GetUserSeriesListResult;
 use App\Shikimori\Client\Config;
+use Symfony\Component\String\UnicodeString;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 
 #[AsTwigComponent]
@@ -66,5 +67,31 @@ final class SeriesList
     public function getUrl(Anime $anime): string
     {
         return $this->config->baseUrl.$anime->getUrl();
+    }
+
+    public function tryShorteningAnimeNameLength(Series $series, Anime $anime): string
+    {
+        $animeName = new UnicodeString($anime->getName());
+        $animeName = $animeName->lower();
+        if ($animeName->length() <= 32) {
+            return $anime->getName();
+        }
+
+        $seriesName = new UnicodeString($series->getName());
+        $seriesName = $seriesName->lower();
+        $commonPrefixLength = 0;
+        for ($i = 0; $i < $seriesName->length() && $i < $animeName->length(); ++$i) {
+            if ($seriesName->codePointsAt($i) !== $animeName->codePointsAt($i)) {
+                break;
+            }
+
+            ++$commonPrefixLength;
+        }
+
+        if ($animeName->length() - $commonPrefixLength < 4) {
+            return $anime->getName();
+        }
+
+        return $animeName->slice($commonPrefixLength)->trim(' :-')->toString();
     }
 }

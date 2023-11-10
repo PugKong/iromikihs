@@ -20,6 +20,8 @@ tasks:
     desc: Format other files
     sources:
       - "**/*.yaml"
+      - "**/*.js"
+      - "**/*.css"
     cmds:
       - npx prettier -w .
 

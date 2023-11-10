@@ -1,7 +1,9 @@
-{% extends 'base.html.twig' %}
+{% extends 'app.html.twig' %}
 
 {% block title %}Incomplete series{% endblock %}
 
-{% block body %}
+{% block content %}
+  <twig:PageHeader>Incomplete series</twig:PageHeader>
+
   <twig:SeriesList user="{{ app.user }}" state="incomplete" />
 {% endblock %}

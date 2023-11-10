@@ -36,7 +36,7 @@ final class AuthControllerTest extends ControllerTestCase
         self::assertResponseRedirects('http://localhost/login');
 
         self::getClient()->followRedirect();
-        self::assertSelectorTextSame('div', 'Invalid credentials.');
+        self::assertSelectorTextSame('.alert-error', 'Invalid credentials.');
     }
 
     public function testLoginRedirectAuthenticatedUserToIndex(): void

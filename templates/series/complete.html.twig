@@ -1,7 +1,9 @@
-{% extends 'base.html.twig' %}
+{% extends 'app.html.twig' %}
 
-{% block title %}Complete series{% endblock %}
+{% block title %}Completed series{% endblock %}
 
-{% block body %}
+{% block content %}
+  <twig:PageHeader>Completed series</twig:PageHeader>
+
   <twig:SeriesList user="{{ app.user }}" state="complete" />
 {% endblock %}

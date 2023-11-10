@@ -1,38 +1,57 @@
-<section class="series-list">
+{% set starIcon %} {# saves ~20ms of page rendering time of ~100 series in dev env #}
+  <twig:Icon:Star />
+{% endset %}
+
+<section class="series-list columns-2 mt-4">
   {% for series in this.series %}
-    <div>
-      <h2>{{ series.name }}</h2>
-      <p>Score: {{ this.seriesRate(series).score|round(2) }}</p>
-      <ul>
-        {% for anime in this.animesBySeries(series) %}
-          <li class="series-list-item">
-            {% if anime.kind is not null %}
-              [{{ anime.kind.value }}]
-            {% endif %}
-            {% if anime.status.value != 'released' %}
-              [{{ anime.status.value }}]
-            {% endif %}
+    <div class="bg-base-200 rounded-box shadow-lg shadow-base-300 mb-5 p-5 break-inside-avoid">
+      <h1 class="text-2xl font-bold">{{ series.name }}</h1>
 
+      <div class="join my-4">
+        <span class="btn btn-sm btn-primary cursor-default join-item">
+          {{ starIcon }}
+          {{ this.seriesRate(series).score|round(2) }}
+        </span>
+        <a class="btn btn-sm btn-secondary underline join-item">Drop series</a>
+      </div>
+
+      {% for anime in this.animesBySeries(series) %}
+        <div class="mt-2">
+          <div class="series-list-item join">
             {% set animeRate = this.animeRate(anime) %}
-            <a href="{{ this.url(anime) }}">
-              {% if animeRate is null or animeRate.status.value != 'completed' %}
-                {{ anime.name }}
-              {% else %}
-                <strong>{{ anime.name }}</strong>
-              {% endif %}
-            </a>
-
             {% if animeRate is not null %}
               {% if animeRate.score != 0 %}
-                [{{ animeRate.score }}]
+                <a class="btn btn-sm btn-primary cursor-default join-item">
+                  {{ starIcon }}
+                  {{ animeRate.score }}
+                </a>
               {% endif %}
               {% if animeRate.status.value != 'completed' %}
-                [{{ animeRate.status.value }}]
+                <a class="btn btn-sm btn-accent cursor-default join-item">{{ animeRate.status.value }}</a>
               {% endif %}
+            {% else %}
+              <a class="btn btn-sm btn-secondary underline join-item">Skip</a>
             {% endif %}
-          </li>
-        {% endfor %}
-      </ul>
+
+            {% if anime.kind is not null %}
+              <span class="btn btn-sm btn-primary cursor-default join-item">{{ anime.kind.value }}</span>
+            {% endif %}
+            {% if anime.status.value != 'released' %}
+              <span class="btn btn-sm btn-accent cursor-default join-item">{{ anime.status.value }}</span>
+            {% endif %}
+
+            {% set animeCompleted = animeRate is not null and animeRate.status.value == 'completed' %}
+            <a href="{{ this.url(anime) }}" class="{{ html_classes('btn', 'btn-sm', 'underline', 'join-item', {
+              'btn-success': animeCompleted,
+              'btn-warning': not animeCompleted,
+            }) }}">
+              <span class="tooltip" data-tip="{{ anime.name }}">
+                {{ this.tryShorteningAnimeNameLength(series, anime) }}
+              </span>
+            </a>
+          </div>
+        </div>
+      {% endfor %}
     </div>
   {% endfor %}
 </section>

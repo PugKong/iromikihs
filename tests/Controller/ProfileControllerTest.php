@@ -41,7 +41,7 @@ final class ProfileControllerTest extends ControllerTestCase
         self::assertPageTitleContains('Profile');
 
         self::assertHasNoAccountLinkSection();
-        self::assertSelectorTextSame('div', "Shikimori account id is $accountId");
+        self::assertSelectorTextSame('main div', "Shikimori account id is $accountId");
     }
 
     public function testProfileShikimoriAccountNotLinked(): void

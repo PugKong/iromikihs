@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+  <twig:NavBar user="{{ app.user }}" route="{{ app.current_route }}" />
+
+  {% for message in app.flashes('notice') %}
+    <div class="flash-notice">{{ message }}</div>
+  {% endfor %}
+
+  <main class="container mx-auto p-4">{% block content %}{% endblock %}</main>
+{% endblock %}
