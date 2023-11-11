@@ -194,4 +194,30 @@ final class SyncUserSeriesListTest extends ServiceTestCase
         $seriesRate = SeriesRateFactory::find(['series' => $series]);
         self::assertSame(5.5, $seriesRate->getScore());
     }
+
+    public function testHandleZeroScores(): void
+    {
+        $user = UserFactory::createOne();
+        $series = SeriesFactory::createOne();
+        $anime1 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
+        $anime2 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
+        AnimeRateFactory::createOne([
+            'user' => $user,
+            'anime' => $anime1,
+            'status' => UserAnimeStatus::COMPLETED,
+            'score' => 0,
+        ]);
+        AnimeRateFactory::createOne([
+            'user' => $user,
+            'anime' => $anime2,
+            'status' => UserAnimeStatus::COMPLETED,
+            'score' => 0,
+        ]);
+
+        $service = self::getService(SyncUserSeriesList::class);
+        ($service)($user->object());
+
+        $seriesRate = SeriesRateFactory::find(['series' => $series]);
+        self::assertSame(0.0, $seriesRate->getScore());
+    }
 }

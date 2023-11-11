@@ -75,7 +75,13 @@ final readonly class SyncUserSeriesList
             }
 
             $userSeries = $this->seriesRates->findOrNew($user, $series);
-            $userSeries->setScore($scoreSum / $scoreCount);
+
+            if (0 === $scoreCount) {
+                $userSeries->setScore(0);
+            } else {
+                $userSeries->setScore($scoreSum / $scoreCount);
+            }
+
             if ($releasedCount === ($completedOrWatchingCount + $droppedCount)) {
                 $userSeries->setState(SeriesState::COMPLETE);
             } else {
