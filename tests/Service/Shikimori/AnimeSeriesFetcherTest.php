@@ -15,6 +15,7 @@ use App\Tests\Factory\UserFactory;
 use App\Tests\Service\ServiceTestCase;
 use App\Tests\TestDouble\Shikimori\ShikimoriSpy;
 use App\Tests\Trait\BaseAnimeDataUtil;
+use DateTimeImmutable;
 
 use const JSON_THROW_ON_ERROR;
 
@@ -35,19 +36,25 @@ final class AnimeSeriesFetcherTest extends ServiceTestCase
 
         $shikimori->addRequest(
             new ItemRequest($token, $firstId = 100),
-            self::createAnimeItem(ItemResponse::class, $firstId),
+            self::createAnimeItem(
+                ItemResponse::class,
+                ...$firstItemArgs = [$firstId, 'airedOn' => new DateTimeImmutable('2007-01-02')],
+            ),
         );
         $shikimori->addRequest(
             new ItemRequest($token, $secondId = 200),
-            self::createAnimeItem(ItemResponse::class, $secondId),
+            self::createAnimeItem(
+                ItemResponse::class,
+                ...$secondItemArgs = [$secondId, 'releasedOn' => new DateTimeImmutable('2008-01-02')],
+            ),
         );
         $shikimori->addRequest(
             new ItemRequest($token, $thirdId = 300),
             self::createAnimeItem(ItemResponse::class, $thirdId),
         );
 
-        $firstRelated = self::createAnimeItem(RelatedResponseAnimeItem::class, $firstId);
-        $secondRelated = self::createAnimeItem(RelatedResponseAnimeItem::class, $secondId);
+        $firstRelated = self::createAnimeItem(RelatedResponseAnimeItem::class, ...$firstItemArgs);
+        $secondRelated = self::createAnimeItem(RelatedResponseAnimeItem::class, ...$secondItemArgs);
         $thirdRelated = self::createAnimeItem(RelatedResponseAnimeItem::class, $thirdId);
 
         $shikimori->addRequest(new RelatedRequest($token, $firstId), [

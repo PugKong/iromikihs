@@ -8,6 +8,7 @@ use App\Entity\Anime;
 use App\Shikimori\Api\BaseAnimeData;
 use App\Shikimori\Api\Enum\Kind;
 use App\Shikimori\Api\Enum\Status;
+use DateTimeImmutable;
 use PHPUnit\Framework\Assert;
 
 trait BaseAnimeDataUtil
@@ -19,14 +20,20 @@ trait BaseAnimeDataUtil
      *
      * @phpstan-return T
      */
-    public static function createAnimeItem(string $class, int $id): BaseAnimeData
-    {
+    public static function createAnimeItem(
+        string $class,
+        int $id,
+        DateTimeImmutable $airedOn = null,
+        DateTimeImmutable $releasedOn = null,
+    ): BaseAnimeData {
         return new $class(
             id: $id,
             name: "Anime $id",
             url: "/animes/$id",
             kind: Kind::TV,
             status: Status::RELEASED,
+            airedOn: $airedOn,
+            releasedOn: $releasedOn,
         );
     }
 
@@ -36,5 +43,7 @@ trait BaseAnimeDataUtil
         Assert::assertSame($item->url, $anime->getUrl());
         Assert::assertSame($item->kind, $anime->getKind());
         Assert::assertSame($item->status, $anime->getStatus());
+        Assert::assertEquals($item->airedOn, $anime->getAiredOn());
+        Assert::assertEquals($item->releasedOn, $anime->getReleasedOn());
     }
 }

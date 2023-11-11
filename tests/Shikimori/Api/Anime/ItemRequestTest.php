@@ -9,6 +9,7 @@ use App\Shikimori\Api\Anime\ItemResponse;
 use App\Shikimori\Api\Enum\Kind;
 use App\Shikimori\Api\Enum\Status;
 use App\Tests\Shikimori\ShikimoriTestCase;
+use DateTimeImmutable;
 
 final class ItemRequestTest extends ShikimoriTestCase
 {
@@ -21,6 +22,8 @@ final class ItemRequestTest extends ShikimoriTestCase
             url: $url = '/animes/related',
             kind: $kind = Kind::MOVIE,
             status: $status = Status::ONGOING,
+            airedOn: new DateTimeImmutable($airedOn = '2007-01-02'),
+            releasedOn: $releasedOn = null,
         );
         $response = [
             'id' => $id,
@@ -28,6 +31,8 @@ final class ItemRequestTest extends ShikimoriTestCase
             'url' => $url,
             'kind' => $kind,
             'status' => $status,
+            'aired_on' => $airedOn,
+            'released_on' => $releasedOn,
         ];
 
         $result = self::request($request, $response);

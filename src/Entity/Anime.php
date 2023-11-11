@@ -8,6 +8,8 @@ use App\Repository\AnimeRepository;
 use App\Shikimori\Api\BaseAnimeData;
 use App\Shikimori\Api\Enum\Kind;
 use App\Shikimori\Api\Enum\Status;
+use DateTimeImmutable;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: AnimeRepository::class)]
@@ -32,12 +34,20 @@ class Anime
     #[ORM\Column]
     private Status $status;
 
+    #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    private ?DateTimeImmutable $airedOn;
+
+    #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    private ?DateTimeImmutable $releasedOn;
+
     public function updateFromBaseData(BaseAnimeData $data): void
     {
         $this->setName($data->name);
         $this->setUrl($data->url);
         $this->setKind($data->kind);
         $this->setStatus($data->status);
+        $this->setAiredOn($data->airedOn);
+        $this->setReleasedOn($data->releasedOn);
     }
 
     public function getId(): int
@@ -108,6 +118,30 @@ class Anime
     public function setStatus(Status $status): self
     {
         $this->status = $status;
+
+        return $this;
+    }
+
+    public function getAiredOn(): ?DateTimeImmutable
+    {
+        return $this->airedOn;
+    }
+
+    public function setAiredOn(?DateTimeImmutable $airedOn): self
+    {
+        $this->airedOn = $airedOn;
+
+        return $this;
+    }
+
+    public function getReleasedOn(): ?DateTimeImmutable
+    {
+        return $this->releasedOn;
+    }
+
+    public function setReleasedOn(?DateTimeImmutable $releasedOn): self
+    {
+        $this->releasedOn = $releasedOn;
 
         return $this;
     }

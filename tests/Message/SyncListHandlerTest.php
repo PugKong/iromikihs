@@ -16,6 +16,7 @@ use App\Tests\Factory\AnimeRateFactory;
 use App\Tests\Factory\UserFactory;
 use App\Tests\TestDouble\Shikimori\ShikimoriSpy;
 use App\Tests\Trait\BaseAnimeDataUtil;
+use DateTimeImmutable;
 use Zenstruck\Messenger\Test\InteractsWithMessenger;
 
 class SyncListHandlerTest extends MessageHandlerTestCase
@@ -36,7 +37,11 @@ class SyncListHandlerTest extends MessageHandlerTestCase
                     id: $rateId = 123,
                     score: $rateScore = 6,
                     status: $rateStatus = UserAnimeStatus::WATCHING,
-                    anime: $item = self::createAnimeItem(AnimeRatesResponseAnimeItem::class, $animeId = 456),
+                    anime: $item = self::createAnimeItem(
+                        AnimeRatesResponseAnimeItem::class,
+                        $animeId = 456,
+                        airedOn: new DateTimeImmutable('2007-01-02'),
+                    ),
                 ),
             ],
         );

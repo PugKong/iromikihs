@@ -7,7 +7,9 @@ namespace App\Service\Shikimori;
 use App\Entity\User;
 use App\Shikimori\Api\Anime\ItemRequest;
 use App\Shikimori\Api\Anime\RelatedRequest;
+use App\Shikimori\Api\BaseAnimeData;
 use App\Shikimori\Client\Shikimori;
+use DateTimeImmutable;
 
 use function array_key_exists;
 use function count;
@@ -33,11 +35,12 @@ final readonly class AnimeSeriesFetcher
         $item = $this->shikimori->request($itemRequest);
 
         $seriesName = $item->name;
+        $seriesNameDate = $this->selectDate($item);
+
         $items = [$id => $item];
         $queue = [$item];
         while (count($queue) > 0) {
             $item = array_shift($queue);
-            $hasPrequel = false;
 
             $relatedRequest = new RelatedRequest($this->tokens->retrieve($user), $item->id);
             $relatedItems = $this->shikimori->request($relatedRequest);
@@ -51,23 +54,33 @@ final readonly class AnimeSeriesFetcher
                     continue;
                 }
 
-                if (self::PREQUEL === $relatedItem->relation) {
-                    $hasPrequel = true;
-                }
-
                 if (array_key_exists($anime->id, $items)) {
                     continue;
+                }
+
+                $date = $this->selectDate($anime);
+                if ($date < $seriesNameDate) {
+                    $seriesName = $anime->name;
                 }
 
                 $items[$anime->id] = $anime;
                 $queue[] = $anime;
             }
-
-            if (!$hasPrequel) {
-                $seriesName = $item->name;
-            }
         }
 
         return new AnimeSeriesFetcherResult($seriesName, array_values($items));
+    }
+
+    private function selectDate(BaseAnimeData $data): DateTimeImmutable
+    {
+        if (null !== $data->airedOn) {
+            return $data->airedOn;
+        }
+
+        if (null !== $data->releasedOn) {
+            return $data->releasedOn;
+        }
+
+        return new DateTimeImmutable('tomorrow');
     }
 }

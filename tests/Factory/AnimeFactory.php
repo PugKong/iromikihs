@@ -7,6 +7,7 @@ namespace App\Tests\Factory;
 use App\Entity\Anime;
 use App\Shikimori\Api\Enum\Kind;
 use App\Shikimori\Api\Enum\Status;
+use DateTimeImmutable;
 use Zenstruck\Foundry\ModelFactory;
 use Zenstruck\Foundry\Proxy;
 
@@ -39,6 +40,8 @@ final class AnimeFactory extends ModelFactory
             'url' => self::faker()->text(),
             'kind' => self::faker()->randomElement(Kind::cases()),
             'status' => self::faker()->randomElement(Status::cases()),
+            'airedOn' => DateTimeImmutable::createFromMutable(self::faker()->dateTimeThisCentury()),
+            'releasedOn' => DateTimeImmutable::createFromMutable(self::faker()->dateTimeThisCentury()),
         ];
     }
 
