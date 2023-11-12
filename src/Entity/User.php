@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Repository\UserRepository;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -21,28 +20,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: UuidType::NAME)]
     private UuidV7 $id;
 
+    #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist'])]
+    private UserSync $sync;
+
     #[ORM\Column(length: 180, unique: true)]
     private string $username;
 
     #[ORM\Column]
     private string $password;
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
-    private ?string $token;
-
-    #[ORM\Column(nullable: true)]
-    private ?int $accountId;
-
     public function __construct()
     {
         $this->id = Uuid::v7();
-        $this->token = null;
-        $this->accountId = null;
+        $this->sync = new UserSync($this);
     }
 
     public function getId(): UuidV7
     {
         return $this->id;
+    }
+
+    public function getSync(): UserSync
+    {
+        return $this->sync;
     }
 
     public function getUsername(): ?string
@@ -77,35 +77,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->password = $password;
 
         return $this;
-    }
-
-    public function getToken(): ?string
-    {
-        return $this->token;
-    }
-
-    public function setToken(?string $token): self
-    {
-        $this->token = $token;
-
-        return $this;
-    }
-
-    public function getAccountId(): ?int
-    {
-        return $this->accountId;
-    }
-
-    public function setAccountId(?int $accountId): self
-    {
-        $this->accountId = $accountId;
-
-        return $this;
-    }
-
-    public function isLinked(): bool
-    {
-        return null !== $this->accountId && null !== $this->token;
     }
 
     public function eraseCredentials(): void

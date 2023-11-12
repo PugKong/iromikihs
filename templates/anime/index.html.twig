@@ -3,12 +3,6 @@
 {% block title %}Anime list{% endblock %}
 
 {% block content %}
-  <twig:LinkAccountSection />
-
-  {% if app.user.linked %}
-    {{ form(syncForm) }}
-  {% endif %}
-
   <twig:PageHeader>Anime list</twig:PageHeader>
 
   <table class="anime-list table bg-base-200 rounded-box mt-4">

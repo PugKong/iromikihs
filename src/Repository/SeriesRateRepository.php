@@ -31,12 +31,4 @@ class SeriesRateRepository extends ServiceEntityRepository
 
         return $rate;
     }
-
-    public function save(SeriesRate ...$series): void
-    {
-        foreach ($series as $userSeries) {
-            $this->getEntityManager()->persist($userSeries);
-        }
-        $this->getEntityManager()->flush();
-    }
 }

@@ -5,30 +5,30 @@ declare(strict_types=1);
 namespace App\Service\Shikimori;
 
 use App\Entity\User;
-use App\Repository\UserRepository;
 use App\Shikimori\Api\Auth\RefreshTokenRequest;
 use App\Shikimori\Api\Auth\TokenResponse;
 use App\Shikimori\Client\Shikimori;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 use RuntimeException;
 
 final readonly class TokenStorage
 {
     private ClockInterface $clock;
-    private UserRepository $users;
     private Shikimori $shikimori;
     private TokenDataEncryptor $tokenEncryptor;
+    private EntityManagerInterface $entityManager;
 
     public function __construct(
         ClockInterface $clock,
-        UserRepository $users,
         Shikimori $shikimori,
         TokenDataEncryptor $tokenEncryptor,
+        EntityManagerInterface $entityManager,
     ) {
         $this->clock = $clock;
-        $this->users = $users;
         $this->shikimori = $shikimori;
         $this->tokenEncryptor = $tokenEncryptor;
+        $this->entityManager = $entityManager;
     }
 
     public function store(User $user, TokenResponse $data): void
@@ -38,7 +38,7 @@ final readonly class TokenStorage
 
     public function retrieve(User $user): string
     {
-        $token = $user->getToken();
+        $token = $user->getSync()->getToken();
         if (null === $token) {
             throw new RuntimeException(sprintf('Oh no, user %s has no token', $user->getId()));
         }
@@ -59,8 +59,10 @@ final readonly class TokenStorage
         $data = new TokenData($response->accessToken, $response->refreshToken, $response->expiresAt());
         $ciphertext = $this->tokenEncryptor->encrypt($data);
 
-        $user->setToken($ciphertext);
-        $this->users->save($user);
+        $sync = $user->getSync();
+        $sync->setToken($ciphertext);
+        $this->entityManager->persist($sync);
+        $this->entityManager->flush();
 
         return $data;
     }

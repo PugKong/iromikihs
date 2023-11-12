@@ -20,8 +20,9 @@ tasks:
     desc: Format other files
     sources:
       - "**/*.yaml"
-      - "**/*.js"
-      - "**/*.css"
+      - "./assets/**/*.js"
+      - "*.js"
+      - "./assets/**/*.css"
     cmds:
       - npx prettier -w .
 
@@ -34,7 +35,7 @@ tasks:
       - "**/*.php"
       - "phpstan.dist.neon"
     cmds:
-      - vendor/bin/phpstan analyze
+      - vendor/bin/phpstan --memory-limit=-1 analyze
   lint:symfony:
     desc: Lint symfony configuration
     sources:

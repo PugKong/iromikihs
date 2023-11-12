@@ -2,44 +2,57 @@
 
 declare(strict_types=1);
 
-namespace App\Service\Anime;
+namespace App\Service\Sync;
 
 use App\Entity\SeriesState;
 use App\Entity\User;
+use App\Entity\UserSyncState;
 use App\Repository\AnimeRateRepository;
 use App\Repository\AnimeRepository;
 use App\Repository\SeriesRateRepository;
 use App\Repository\SeriesRepository;
 use App\Shikimori\Api\Enum\Status;
 use App\Shikimori\Api\Enum\UserAnimeStatus;
+use Doctrine\ORM\EntityManagerInterface;
+use Psr\Clock\ClockInterface;
 
 use function in_array;
 
-final readonly class SyncUserSeriesList
+final readonly class SyncUserSeriesRates
 {
     private AnimeRateRepository $animeRates;
     private SeriesRepository $series;
     private AnimeRepository $animes;
     private SeriesRateRepository $seriesRates;
+    private EntityManagerInterface $entityManager;
+    private ClockInterface $clock;
 
     public function __construct(
         AnimeRateRepository $animeRates,
         SeriesRepository $series,
         AnimeRepository $animes,
         SeriesRateRepository $seriesRates,
+        EntityManagerInterface $entityManager,
+        ClockInterface $clock,
     ) {
         $this->animeRates = $animeRates;
         $this->series = $series;
         $this->animes = $animes;
         $this->seriesRates = $seriesRates;
+        $this->entityManager = $entityManager;
+        $this->clock = $clock;
     }
 
     public function __invoke(User $user): void
     {
+        $sync = $user->getSync();
+        if (!$sync->isLinked() || UserSyncState::SERIES_RATES !== $sync->getState()) {
+            return;
+        }
+
         $seriesIds = $this->animeRates->findSeriesIdsByUser($user);
         $syncSeries = $this->series->findBy(['id' => $seriesIds]);
 
-        $saveUserSeries = [];
         foreach ($syncSeries as $series) {
             $releasedCount = $this->animes->count(['series' => $series, 'status' => Status::RELEASED]);
             if ($releasedCount <= 1) {
@@ -75,7 +88,6 @@ final readonly class SyncUserSeriesList
             }
 
             $userSeries = $this->seriesRates->findOrNew($user, $series);
-
             if (0 === $scoreCount) {
                 $userSeries->setScore(0);
             } else {
@@ -88,9 +100,13 @@ final readonly class SyncUserSeriesList
                 $userSeries->setState(SeriesState::INCOMPLETE);
             }
 
-            $saveUserSeries[] = $userSeries;
+            $this->entityManager->persist($userSeries);
         }
 
-        $this->seriesRates->save(...$saveUserSeries);
+        $sync->setState(null);
+        $sync->setSyncedAt($this->clock->now());
+        $this->entityManager->flush();
+
+        $this->entityManager->flush();
     }
 }

@@ -4,19 +4,15 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
-use App\Message\SyncList;
 use App\Shikimori\Api\Enum\Kind;
 use App\Shikimori\Api\Enum\Status;
 use App\Shikimori\Api\Enum\UserAnimeStatus;
 use App\Tests\Factory\AnimeFactory;
 use App\Tests\Factory\AnimeRateFactory;
 use App\Tests\Factory\UserFactory;
-use Zenstruck\Messenger\Test\InteractsWithMessenger;
 
 final class AnimeControllerTest extends ControllerTestCase
 {
-    use InteractsWithMessenger;
-
     /**
      * @dataProvider requiresAuthenticationProvider
      */
@@ -57,26 +53,14 @@ final class AnimeControllerTest extends ControllerTestCase
         self::assertResponseIsSuccessful();
         self::assertPageTitleContains('Anime list');
 
-        self::assertHasNoAccountLinkSection();
-        self::assertHasButton('Sync list');
+        self::assertHasPageHeader('Anime list');
+        self::assertHasSyncStatusComponent();
 
         self::assertTable(
             'table.anime-list',
             [['Name', 'Kind', 'Status', 'Progress', 'Score']],
             [[$animeName, $animeKind->value, $animeStatus->value, $rateProgress->value, (string) $rateScore]],
         );
-    }
-
-    public function testIndexProfileNotLinked(): void
-    {
-        self::getClient()
-            ->loginUser(UserFactory::createOne()->object())
-            ->request('GET', '/')
-        ;
-        self::assertResponseIsSuccessful();
-
-        self::assertHasAccountLinkSection();
-        self::assertHasNoButton('Sync list');
     }
 
     public function testIndexQueryCount(): void
@@ -97,26 +81,5 @@ final class AnimeControllerTest extends ControllerTestCase
         // 2 requests to build nav bar
         // 1 request to load page data
         self::assertSame(4, self::dbCollector()->getQueryCount());
-    }
-
-    public function testSync(): void
-    {
-        $user = UserFactory::new()->withLinkedAccount()->create();
-
-        self::getClient()
-            ->loginUser($user->object())
-            ->request('GET', '/')
-        ;
-        self::assertResponseIsSuccessful();
-
-        self::getClient()->submitForm('Sync list');
-        self::assertResponseRedirects('/');
-
-        $messages = $this->transport('async')->queue()->messages(SyncList::class);
-        self::assertCount(1, $messages);
-        self::assertEquals($user->getId(), $messages[0]->userId);
-
-        self::getClient()->followRedirect();
-        self::assertSelectorTextSame('.flash-notice', 'Your list will be synced soon.');
     }
 }

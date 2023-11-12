@@ -48,16 +48,18 @@ abstract class ControllerTestCase extends WebTestCase
         self::assertResponseRedirects('http://localhost/login');
     }
 
-    public static function assertHasButton(string $value): void
+    public static function assertHasFlashError(string $message): void
     {
         $crawler = self::getClient()->getCrawler();
-        self::assertCount(1, $crawler->selectButton($value));
+        $errors = $crawler->filter('section.bg-error')->each(fn (Crawler $c) => $c->text());
+        self::assertContains($message, $errors);
     }
 
-    public static function assertHasNoButton(string $value): void
+    public static function assertHasNoFlashError(string $message): void
     {
         $crawler = self::getClient()->getCrawler();
-        self::assertCount(0, $crawler->selectButton($value));
+        $errors = $crawler->filter('section.bg-error')->each(fn (Crawler $c) => $c->text());
+        self::assertNotContains($message, $errors);
     }
 
     public static function assertTable(string $selector, array $expectedHeaders, array $expectedBody): void
@@ -95,27 +97,16 @@ abstract class ControllerTestCase extends WebTestCase
         self::assertSame($expected, $actual);
     }
 
-    public static function assertHasAccountLinkSection(): void
+    public static function assertHasPageHeader(string $header): void
     {
-        $link = self::getClient()->getCrawler()->selectLink('Link your account');
-        self::assertCount(1, $link);
-        self::assertSame(
-            'Shikimori account is not linked. Link your account to enable sync.',
-            $link->ancestors()->text(),
-        );
-
-        $linkQuery = http_build_query([
-            'client_id' => 'shikimori_client_id',
-            'redirect_uri' => 'http://localhost/profile/link',
-            'response_type' => 'code',
-        ]);
-        self::assertSame("https://shikimori.example.com/oauth/authorize?$linkQuery", $link->attr('href'));
+        $crawler = self::getClient()->getCrawler();
+        self::assertSame($header, $crawler->filter('section.page-header')->text());
     }
 
-    public static function assertHasNoAccountLinkSection(): void
+    public static function assertHasSyncStatusComponent(): void
     {
-        $link = self::getClient()->getCrawler()->selectLink('Link your account');
-        self::assertCount(0, $link);
+        $crawler = self::getClient()->getCrawler();
+        self::assertCount(1, $crawler->filter('section.sync-status'));
     }
 
     public static function enableProfiler(): void

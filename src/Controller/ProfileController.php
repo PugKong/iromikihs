@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Message\LinkAccount;
+use App\Service\Sync\DispatchLinkAccount;
+use App\Service\Sync\UserHasLinkedAccountException;
+use App\Service\Sync\UserHasSyncInProgressException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
-use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -29,11 +30,16 @@ final class ProfileController extends AbstractController
         User $user,
         #[MapQueryParameter]
         string $code,
-        MessageBusInterface $bus,
+        DispatchLinkAccount $linkAccount,
     ): Response {
-        $bus->dispatch(new LinkAccount($user->getId(), $code));
-        $this->addFlash('notice', 'Your account will be linked soon.');
+        try {
+            ($linkAccount)($user, $code);
+        } catch (UserHasLinkedAccountException) {
+            $this->addFlash('error', 'Account already linked.');
+        } catch (UserHasSyncInProgressException) {
+            $this->addFlash('error', 'Can not link account due to active sync.');
+        }
 
-        return $this->redirectToRoute('app_profile');
+        return $this->redirectToRoute('app_anime_index');
     }
 }

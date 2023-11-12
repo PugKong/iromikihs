@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
-use App\Message\LinkAccount;
+use App\Entity\UserSyncState;
+use App\Message\LinkAccountMessage;
 use App\Tests\Factory\UserFactory;
 use Zenstruck\Messenger\Test\InteractsWithMessenger;
 
@@ -40,19 +41,10 @@ final class ProfileControllerTest extends ControllerTestCase
         self::assertResponseIsSuccessful();
         self::assertPageTitleContains('Profile');
 
-        self::assertHasNoAccountLinkSection();
+        self::assertHasPageHeader('Profile');
+        self::assertHasSyncStatusComponent();
+
         self::assertSelectorTextSame('main div', "Shikimori account id is $accountId");
-    }
-
-    public function testProfileShikimoriAccountNotLinked(): void
-    {
-        self::getClient()
-            ->loginUser(UserFactory::createOne()->object())
-            ->request('GET', '/profile')
-        ;
-
-        self::assertResponseIsSuccessful();
-        self::assertHasAccountLinkSection();
     }
 
     public function testLinkAccount(): void
@@ -61,16 +53,59 @@ final class ProfileControllerTest extends ControllerTestCase
             ->loginUser($user = UserFactory::createOne()->object())
             ->request('GET', '/profile/link?code=the_code')
         ;
-        self::assertResponseRedirects('/profile');
+        self::assertResponseRedirects('/');
 
-        $messages = $this->transport('async')->queue()->messages(LinkAccount::class);
+        self::assertSame(UserSyncState::LINK_ACCOUNT, $user->getSync()->getState());
+
+        $messages = $this->transport('async')->queue()->messages(LinkAccountMessage::class);
         self::assertCount(1, $messages);
         self::assertEquals($user->getId(), $messages[0]->userId);
         self::assertSame('the_code', $messages[0]->code);
+    }
+
+    public function testLinkAccountChecksAccountLinkState(): void
+    {
+        self::getClient()
+            ->loginUser(UserFactory::new()->withLinkedAccount()->create()->object())
+            ->request('GET', '/profile/link?code=the_code')
+        ;
+        self::assertResponseRedirects('/');
+
+        $messages = $this->transport('async')->queue()->messages(LinkAccountMessage::class);
+        self::assertCount(0, $messages);
 
         self::getClient()->followRedirect();
-        self::assertSelectorTextSame('.flash-notice', 'Your account will be linked soon.');
-        self::assertHasAccountLinkSection();
+        self::assertHasFlashError('Account already linked.');
+    }
+
+    /**
+     * @dataProvider linkAccountChecksSyncStateProvider
+     */
+    public function testLinkAccountChecksSyncState(?UserSyncState $state, bool $allowed): void
+    {
+        self::getClient()
+            ->loginUser(UserFactory::new()->withSyncStatus($state)->create()->object())
+            ->request('GET', '/profile/link?code=the_code')
+        ;
+        self::assertResponseRedirects('/');
+
+        self::getClient()->followRedirect();
+        if ($allowed) {
+            self::assertHasNoFlashError('Can not link account due to active sync.');
+        } else {
+            self::assertHasFlashError('Can not link account due to active sync.');
+        }
+    }
+
+    public static function linkAccountChecksSyncStateProvider(): array
+    {
+        return [
+            [null, true],
+            [UserSyncState::FAILED, true],
+            [UserSyncState::ANIME_RATES, false],
+            [UserSyncState::SERIES, false],
+            [UserSyncState::SERIES_RATES, false],
+        ];
     }
 
     public function testLinkAccountRequiresCodeQueryParameter(): void

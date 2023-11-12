@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Factory;
 
 use App\Entity\User;
+use App\Entity\UserSyncState;
 use App\Service\Shikimori\TokenData;
 use App\Service\Shikimori\TokenDataEncryptor;
 use DateTimeImmutable;
@@ -45,22 +46,42 @@ final class UserFactory extends ModelFactory
         parent::__construct();
     }
 
-    public function withLinkedAccount(int $accountId = 6610, string $accessToken = null): self
+    public function withLinkedAccount(
+        int $accountId = 6610,
+        string $accessToken = null,
+        string $refreshToken = null,
+        DateTimeImmutable $expiresAt = null,
+    ): self {
+        return $this->afterInstantiate(
+            function (User $user) use ($accountId, $accessToken, $refreshToken, $expiresAt): void {
+                $sync = $user->getSync();
+                $sync->setAccountId($accountId);
+
+                $expiresAt ??= new DateTimeImmutable('+1 year');
+
+                $token = $this->tokenEncryptor->encrypt(new TokenData(
+                    accessToken: $accessToken ?? self::DEFAULT_ACCESS_TOKEN,
+                    refreshToken: $refreshToken ?? 'default refresh token',
+                    expiresAt: $expiresAt->getTimestamp(),
+                ));
+                $sync->setToken($token);
+            },
+        );
+    }
+
+    public function withSyncStatus(UserSyncState $state = null, DateTimeImmutable $syncedAt = null): self
     {
-        return $this->addState([
-            'accountId' => $accountId,
-            'token' => $this->tokenEncryptor->encrypt(new TokenData(
-                accessToken: $accessToken ?? self::DEFAULT_ACCESS_TOKEN,
-                refreshToken: 'default refresh token',
-                expiresAt: (new DateTimeImmutable('+1 year'))->getTimestamp(),
-            )),
-        ]);
+        return $this->afterInstantiate(function (User $user) use ($state, $syncedAt): void {
+            $sync = $user->getSync();
+
+            $sync->setState($state);
+            $sync->setSyncedAt($syncedAt);
+        });
     }
 
     protected function getDefaults(): array
     {
         return [
-            'token' => null,
             'username' => self::faker()->userName(),
             'password' => 'qwerty',
         ];

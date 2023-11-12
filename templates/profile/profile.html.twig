@@ -5,9 +5,7 @@
 {% block content %}
   <twig:PageHeader>Profile</twig:PageHeader>
 
-  <twig:LinkAccountSection />
-
-  {% if app.user.linked %}
-    <div class="mt-4">Shikimori account id is {{ app.user.accountId }}</div>
+  {% if app.user.sync.linked %}
+    <div class="mt-4">Shikimori account id is {{ app.user.sync.accountId }}</div>
   {% endif %}
 {% endblock %}

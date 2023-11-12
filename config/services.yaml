@@ -37,8 +37,11 @@ when@test:
 
     App\Shikimori\Client\Shikimori: '@App\Tests\TestDouble\Shikimori\ShikimoriSpy'
     App\Shikimori\Client\RateLimiter: '@App\Tests\TestDouble\Shikimori\RateLimiterSpy'
+    App\Service\Shikimori\AnimeSeriesFetcher: '@App\Tests\TestDouble\Shikimori\AnimeSeriesFetcherSpy'
 
     App\Shikimori\Client\RateLimiterSymfony:
       public: true
     App\Shikimori\Client\ShikimoriHttp:
+      public: true
+    App\Service\Shikimori\ShikimoriAnimesSeriesFetcher:
       public: true

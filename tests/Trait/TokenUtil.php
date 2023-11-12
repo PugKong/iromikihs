@@ -22,7 +22,7 @@ trait TokenUtil
 
     public static function assertTokenData(TokenData $expected, User $user): void
     {
-        $ciphertext = $user->getToken();
+        $ciphertext = $user->getSync()->getToken();
         Assert::assertNotNull($ciphertext);
         $actual = self::getService(TokenDataEncryptor::class)->decrypt($ciphertext);
 

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Tests\Service\Shikimori;
 
 use App\Service\Shikimori\TokenData;
-use App\Service\Shikimori\TokenDataEncryptor;
 use App\Service\Shikimori\TokenStorage;
 use App\Shikimori\Api\Auth\RefreshTokenRequest;
 use App\Shikimori\Api\Auth\TokenResponse;
@@ -75,13 +74,7 @@ final class TokenStorageTest extends ServiceTestCase
     {
         self::mockTime(new DateTimeImmutable('2007-01-03 03:04:05'));
 
-        $user = UserFactory::createOne([
-            'token' => self::getService(TokenDataEncryptor::class)->encrypt(new TokenData(
-                accessToken: $expectedToken = 'the access token',
-                refreshToken: 'doesnt matter',
-                expiresAt: (new DateTimeImmutable('2007-01-03 03:05:05'))->getTimestamp(),
-            )),
-        ]);
+        $user = UserFactory::new()->withLinkedAccount(accessToken: $expectedToken = 'the access token')->create();
 
         $actualToken = self::getService(TokenStorage::class)->retrieve($user->object());
         self::assertSame($expectedToken, $actualToken);
@@ -91,13 +84,14 @@ final class TokenStorageTest extends ServiceTestCase
     {
         self::mockTime(new DateTimeImmutable('2007-01-03 03:04:05'));
 
-        $user = UserFactory::createOne([
-            'token' => self::getService(TokenDataEncryptor::class)->encrypt(new TokenData(
+        $user = UserFactory::new()
+            ->withLinkedAccount(
                 accessToken: 'expired access token',
                 refreshToken: $oldRefreshToken = 'the refresh token',
-                expiresAt: (new DateTimeImmutable('2007-01-03 03:05:04'))->getTimestamp(),
-            )),
-        ]);
+                expiresAt: (new DateTimeImmutable('2007-01-03 03:05:04')),
+            )
+            ->create()
+        ;
 
         $shikimori = self::getService(ShikimoriSpy::class);
         $shikimori->addRequest(

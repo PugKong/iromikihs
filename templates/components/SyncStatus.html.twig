@@ -1,0 +1,27 @@
+<section class="sync-status p-4 rounded-box shadow-lg shadow-base-300 bg-base-200">
+  {% if not this.user.sync.linked and this.state is null %}
+    Shikimori account is not linked.
+    <a href="{{ this.linkUrl }}" class="btn btn-xs btn-primary">Link your account</a> to enable sync.
+  {% elseif this.state is null %}
+    {% if this.sync.syncedAt is null %}
+      Data was never synced.
+    {% else %}
+      Data synced at {{ this.sync.syncedAt|date('Y-m-d') }}.
+    {% endif %}
+    <twig:SimpleForm action="{{ path('app_sync_start') }}" class="btn btn-xs btn-primary">Sync</twig:SimpleForm> it now.
+  {% elseif this.state == 'link_account' %}
+    Linking account.
+  {% elseif this.state == 'anime_rates' %}
+    1/3 Syncing anime list.
+  {% elseif this.state == 'series' %}
+    2/3 Syncing series data.
+  {% elseif this.state == 'series_rates' %}
+    3/3 Syncing series states.
+  {% elseif this.state == 'failed' and not this.user.sync.linked %}
+    Failed to link account. Try to <a href="{{ this.linkUrl }}" class="btn btn-xs btn-primary">link it</a> again.
+  {% elseif this.state == 'failed' %}
+    Last data sync failed. Try to
+    <twig:SimpleForm action="{{ path('app_sync_start') }}" class="btn btn-xs btn-primary">Sync</twig:SimpleForm>
+    it again.
+  {% endif %}
+</section>

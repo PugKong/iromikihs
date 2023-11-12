@@ -5,18 +5,20 @@ declare(strict_types=1);
 namespace App\Service\User;
 
 use App\Entity\User;
-use App\Repository\UserRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 final readonly class Create
 {
-    private UserRepository $users;
     private UserPasswordHasherInterface $passwordHasher;
+    private EntityManagerInterface $entityManager;
 
-    public function __construct(UserRepository $users, UserPasswordHasherInterface $passwordHasher)
-    {
-        $this->users = $users;
+    public function __construct(
+        UserPasswordHasherInterface $passwordHasher,
+        EntityManagerInterface $entityManager,
+    ) {
         $this->passwordHasher = $passwordHasher;
+        $this->entityManager = $entityManager;
     }
 
     public function __invoke(CreateData $data): void
@@ -27,6 +29,7 @@ final readonly class Create
         $password = $this->passwordHasher->hashPassword($user, $data->password);
         $user->setPassword($password);
 
-        $this->users->save($user);
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
     }
 }

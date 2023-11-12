@@ -16,10 +16,10 @@ framework:
       # sync: 'sync://'
 
     routing:
-      App\Message\LinkAccount: async
-      App\Message\SyncList: async
-      App\Message\SyncSeries: async
-      App\Message\SyncUserSeries: async
+      App\Message\LinkAccountMessage: async
+      App\Message\SyncUserAnimeRatesMessage: async
+      App\Message\SyncUserSeriesMessage: async
+      App\Message\SyncUserSeriesRatesMessage: async
       Symfony\Component\Mailer\Messenger\SendEmailMessage: async
       Symfony\Component\Notifier\Message\ChatMessage: async
       Symfony\Component\Notifier\Message\SmsMessage: async

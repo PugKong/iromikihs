@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Service\Shikimori;
 
-use App\Service\Shikimori\AnimeSeriesFetcher;
+use App\Service\Shikimori\ShikimoriAnimesSeriesFetcher;
 use App\Shikimori\Api\Anime\ItemRequest;
 use App\Shikimori\Api\Anime\ItemResponse;
 use App\Shikimori\Api\Anime\RelatedRequest;
@@ -19,7 +19,7 @@ use DateTimeImmutable;
 
 use const JSON_THROW_ON_ERROR;
 
-final class AnimeSeriesFetcherTest extends ServiceTestCase
+final class ShikimoriAnimeSeriesFetcherTest extends ServiceTestCase
 {
     use BaseAnimeDataUtil;
 
@@ -58,20 +58,20 @@ final class AnimeSeriesFetcherTest extends ServiceTestCase
         $thirdRelated = self::createAnimeItem(RelatedResponseAnimeItem::class, $thirdId);
 
         $shikimori->addRequest(new RelatedRequest($token, $firstId), [
-            new RelatedResponse(AnimeSeriesFetcher::SEQUEL, $secondRelated),
+            new RelatedResponse(ShikimoriAnimesSeriesFetcher::SEQUEL, $secondRelated),
             $other,
         ]);
         $shikimori->addRequest(new RelatedRequest($token, $secondId), [
             $other,
-            new RelatedResponse(AnimeSeriesFetcher::PREQUEL, $firstRelated),
-            new RelatedResponse(AnimeSeriesFetcher::SEQUEL, $thirdRelated),
+            new RelatedResponse(ShikimoriAnimesSeriesFetcher::PREQUEL, $firstRelated),
+            new RelatedResponse(ShikimoriAnimesSeriesFetcher::SEQUEL, $thirdRelated),
         ]);
         $shikimori->addRequest(new RelatedRequest($token, $thirdId), [
-            new RelatedResponse(AnimeSeriesFetcher::PREQUEL, $secondRelated),
+            new RelatedResponse(ShikimoriAnimesSeriesFetcher::PREQUEL, $secondRelated),
             $other,
         ]);
 
-        $fetcher = self::getService(AnimeSeriesFetcher::class);
+        $fetcher = self::getService(ShikimoriAnimesSeriesFetcher::class);
         $result = ($fetcher)($user->object(), $selectInitialId([$firstId, $secondId, $thirdId]));
 
         self::assertSame($firstRelated->name, $result->seriesName);

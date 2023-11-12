@@ -1,0 +1,8 @@
+<form method="post" action="{{ this.action }}" {{ attributes }}>
+  <input
+    type="hidden"
+    name="{{ constant('App\\Twig\\Component\\SimpleForm::CSRF_TOKEN_FIELD') }}"
+    value="{{ csrf_token(constant('App\\Twig\\Component\\SimpleForm::CSRF_TOKEN_ID')) }}"
+  />
+  <button type="submit">{% block content %}{% endblock %}</button>
+</form>

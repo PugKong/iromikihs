@@ -46,6 +46,9 @@ final class SeriesControllerTest extends ControllerTestCase
         self::assertResponseIsSuccessful();
         self::assertPageTitleContains('Incomplete series');
 
+        self::assertHasPageHeader('Incomplete series');
+        self::assertHasSyncStatusComponent();
+
         $sections = self::getClient()->getCrawler()->filter('section.series-list');
         self::assertCount(1, $sections);
 
@@ -69,6 +72,9 @@ final class SeriesControllerTest extends ControllerTestCase
         ;
         self::assertResponseIsSuccessful();
         self::assertPageTitleContains('Completed series');
+
+        self::assertHasPageHeader('Completed series');
+        self::assertHasSyncStatusComponent();
 
         $sections = self::getClient()->getCrawler()->filter('section.series-list');
         self::assertCount(1, $sections);

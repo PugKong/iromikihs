@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Message;
 
-use App\Message\SyncList;
-use App\Message\SyncListHandler;
-use App\Message\SyncSeries;
+use App\Entity\UserSyncState;
+use App\Message\SyncUserAnimeRatesHandler;
+use App\Message\SyncUserAnimeRatesMessage;
+use App\Message\SyncUserSeriesMessage;
 use App\Shikimori\Api\Enum\UserAnimeStatus;
 use App\Shikimori\Api\User\AnimeRatesRequest;
 use App\Shikimori\Api\User\AnimeRatesResponse;
@@ -19,15 +20,19 @@ use App\Tests\Trait\BaseAnimeDataUtil;
 use DateTimeImmutable;
 use Zenstruck\Messenger\Test\InteractsWithMessenger;
 
-class SyncListHandlerTest extends MessageHandlerTestCase
+class SyncUserAnimeRatesHandlerTest extends MessageHandlerTestCase
 {
     use BaseAnimeDataUtil;
     use InteractsWithMessenger;
 
     public function testHandle(): void
     {
-        $user = UserFactory::new()->withLinkedAccount($accountId = 6610, $accessToken = '123')->create();
-        $message = new SyncList($user->getId());
+        $user = UserFactory::new()
+            ->withLinkedAccount($accountId = 6610, $accessToken = '123')
+            ->withSyncStatus(state: UserSyncState::ANIME_RATES)
+            ->create()
+        ;
+        $message = new SyncUserAnimeRatesMessage($user->getId());
 
         $shikimori = self::getService(ShikimoriSpy::class);
         $shikimori->addRequest(
@@ -46,7 +51,7 @@ class SyncListHandlerTest extends MessageHandlerTestCase
             ],
         );
 
-        $handler = self::getService(SyncListHandler::class);
+        $handler = self::getService(SyncUserAnimeRatesHandler::class);
         ($handler)($message);
 
         $anime = AnimeFactory::find($animeId);
@@ -57,7 +62,7 @@ class SyncListHandlerTest extends MessageHandlerTestCase
         self::assertSame($rateScore, $rate->getScore());
         self::assertSame($rateStatus, $rate->getStatus());
 
-        $messages = $this->transport('async')->queue()->messages(SyncSeries::class);
+        $messages = $this->transport('async')->queue()->messages(SyncUserSeriesMessage::class);
         self::assertCount(1, $messages);
         self::assertEquals($user->getId(), $messages[0]->userId);
     }
