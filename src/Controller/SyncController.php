@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Service\Exception\UserHasNoLinkedAccountException;
+use App\Service\Exception\UserHasSyncInProgressException;
 use App\Service\Sync\DispatchUserDataSync;
-use App\Service\Sync\UserHasNoLinkedAccountException;
-use App\Service\Sync\UserHasSyncInProgressException;
 use App\Twig\Component\SimpleForm;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;

@@ -1,0 +1,9 @@
+{% extends 'app.html.twig' %}
+
+{% block title %}Dropped series{% endblock %}
+
+{% block content %}
+  <twig:PageHeader>Dropped series</twig:PageHeader>
+
+  <twig:SeriesList user="{{ app.user }}" state="dropped" />
+{% endblock %}

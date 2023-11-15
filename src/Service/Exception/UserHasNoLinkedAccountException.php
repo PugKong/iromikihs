@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Service\Sync;
+namespace App\Service\Exception;
 
 use App\Entity\User;
 use RuntimeException;

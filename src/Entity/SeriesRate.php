@@ -89,4 +89,11 @@ class SeriesRate
 
         return $this;
     }
+
+    public function isDropped(): bool
+    {
+        $state = $this->state ?? false;
+
+        return SeriesState::DROPPED === $state;
+    }
 }

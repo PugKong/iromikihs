@@ -20,6 +20,7 @@ use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 final class SeriesList
 {
     private GetUserSeriesListResult $list;
+    private User $user;
 
     private Config $config;
     private GetUserSeriesList $getUserSeriesList;
@@ -36,6 +37,7 @@ final class SeriesList
     {
         $state = SeriesState::from($state);
         $this->list = ($this->getUserSeriesList)($user, $state);
+        $this->user = $user;
     }
 
     /**
@@ -93,5 +95,10 @@ final class SeriesList
         }
 
         return $animeName->slice($commonPrefixLength)->trim(' :-')->toString();
+    }
+
+    public function getUser(): User
+    {
+        return $this->user;
     }
 }

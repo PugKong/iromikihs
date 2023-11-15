@@ -311,4 +311,33 @@ final class SyncUserSeriesRatesTest extends ServiceTestCase
 
         self::assertSame($state, $user->getSync()->getState());
     }
+
+    public function testDontOverrideDroppedState(): void
+    {
+        $user = UserFactory::new()
+            ->withLinkedAccount()
+            ->withSyncStatus(state: UserSyncState::SERIES_RATES)
+            ->create()
+        ;
+        $series = SeriesFactory::createOne();
+        $completedAnime = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
+        AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
+        AnimeRateFactory::createOne([
+            'user' => $user,
+            'anime' => $completedAnime,
+            'status' => UserAnimeStatus::COMPLETED,
+        ]);
+        SeriesRateFactory::createOne([
+            'user' => $user,
+            'series' => $series,
+            'state' => SeriesState::DROPPED,
+        ]);
+
+        $service = self::getService(SyncUserSeriesRates::class);
+        ($service)($user->object());
+
+        $seriesRate = SeriesRateFactory::find(['series' => $series]);
+        self::assertEquals($user->object(), $seriesRate->getUser());
+        self::assertSame(SeriesState::DROPPED, $seriesRate->getState());
+    }
 }

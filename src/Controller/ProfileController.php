@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Service\Exception\UserHasLinkedAccountException;
+use App\Service\Exception\UserHasSyncInProgressException;
 use App\Service\Sync\DispatchLinkAccount;
-use App\Service\Sync\UserHasLinkedAccountException;
-use App\Service\Sync\UserHasSyncInProgressException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;

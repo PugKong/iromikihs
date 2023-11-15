@@ -48,6 +48,7 @@ final class SyncControllerTest extends ControllerTestCase
             ['/'],
             ['/series/incomplete'],
             ['/series/complete'],
+            ['/series/dropped'],
             ['/profile'],
         ];
     }

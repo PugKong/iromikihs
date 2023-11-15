@@ -49,6 +49,11 @@ final class NavBar
             'Completed series',
             $this->seriesRates->count(['user' => $this->user, 'state' => SeriesState::COMPLETE]),
         );
+        $items[] = $this->makeItem(
+            'app_series_dropped',
+            'Dropped series',
+            $this->seriesRates->count(['user' => $this->user, 'state' => SeriesState::DROPPED]),
+        );
         $items[] = $this->makeItem('app_profile', 'Profile');
         $items[] = $this->makeItem('app_logout', 'Log out');
 

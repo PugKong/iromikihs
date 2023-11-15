@@ -63,7 +63,7 @@ final readonly class GetUserSeriesListResult
     {
         $key = (string) $series->getId();
 
-        return $this->animes[$key];
+        return $this->animes[$key] ?? [];
     }
 
     public function getAnimeRate(Anime $anime): ?AnimeRate

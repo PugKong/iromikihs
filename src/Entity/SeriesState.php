@@ -8,4 +8,5 @@ enum SeriesState: string
 {
     case COMPLETE = 'complete';
     case INCOMPLETE = 'incomplete';
+    case DROPPED = 'dropped';
 }

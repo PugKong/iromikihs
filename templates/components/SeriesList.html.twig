@@ -8,11 +8,28 @@
       <h1 class="text-2xl font-bold">{{ series.name }}</h1>
 
       <div class="join my-4">
+        {% set seriesRate = this.seriesRate(series) %}
         <span class="btn btn-sm btn-primary cursor-default join-item">
           {{ starIcon }}
-          {{ this.seriesRate(series).score|round(2) }}
+          {{ seriesRate.score|round(2) }}
         </span>
-        <a class="btn btn-sm btn-secondary underline join-item">Drop series</a>
+        {% if not seriesRate.dropped %}
+          <twig:SimpleForm
+            action="{{ path('app_series_drop', {seriesRate: seriesRate.id}) }}"
+            class="btn btn-sm btn-secondary underline join-item"
+            disabled="{{ this.user.sync.inProgress }}"
+          >
+            <span class="uppercase">Drop series</span>
+          </twig:SimpleForm>
+        {% else %}
+          <twig:SimpleForm
+            action="{{ path('app_series_restore', {seriesRate: seriesRate.id}) }}"
+            class="btn btn-sm btn-secondary underline join-item"
+            disabled="{{ this.user.sync.inProgress }}"
+          >
+            <span class="uppercase">Restore series</span>
+          </twig:SimpleForm>
+        {% endif %}
       </div>
 
       {% for anime in this.animesBySeries(series) %}
