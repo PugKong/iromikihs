@@ -44,12 +44,7 @@ final class SyncStatusTest extends ComponentTestCase
 
         $accountLinkButton = $section->selectLink('Link your account');
         self::assertCount(1, $accountLinkButton);
-        $linkQuery = http_build_query([
-            'client_id' => 'shikimori_client_id',
-            'redirect_uri' => 'http://localhost/profile/link',
-            'response_type' => 'code',
-        ]);
-        self::assertSame("https://shikimori.example.com/oauth/authorize?$linkQuery", $accountLinkButton->attr('href'));
+        self::assertSame('/profile/link/start', $accountLinkButton->attr('href'));
     }
 
     public function testComponentRendersLinkingAccount(): void
@@ -176,11 +171,6 @@ final class SyncStatusTest extends ComponentTestCase
 
         $accountLinkButton = $section->selectLink('link it');
         self::assertCount(1, $accountLinkButton);
-        $linkQuery = http_build_query([
-            'client_id' => 'shikimori_client_id',
-            'redirect_uri' => 'http://localhost/profile/link',
-            'response_type' => 'code',
-        ]);
-        self::assertSame("https://shikimori.example.com/oauth/authorize?$linkQuery", $accountLinkButton->attr('href'));
+        self::assertSame('/profile/link/start', $accountLinkButton->attr('href'));
     }
 }

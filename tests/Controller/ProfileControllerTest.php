@@ -26,6 +26,7 @@ final class ProfileControllerTest extends ControllerTestCase
         return [
             ['GET', '/profile'],
             ['GET', '/profile/link'],
+            ['GET', '/profile/link/start'],
         ];
     }
 
@@ -115,5 +116,39 @@ final class ProfileControllerTest extends ControllerTestCase
             ->request('GET', '/profile/link')
         ;
         self::assertResponseStatusCodeSame(404);
+    }
+
+    /**
+     * @dataProvider linkAccountRemembersRedirectLocationProvider
+     */
+    public function testLinkAccountRemembersRedirectLocation(string $fromUrl): void
+    {
+        self::getClient()
+            ->loginUser(UserFactory::createOne()->object())
+            ->request('GET', $fromUrl)
+        ;
+        self::getClient()->clickLink('Link your account');
+
+        $linkQuery = http_build_query([
+            'client_id' => 'shikimori_client_id',
+            'redirect_uri' => 'http://localhost/profile/link',
+            'response_type' => 'code',
+        ]);
+        $linkUrl = "https://shikimori.example.com/oauth/authorize?$linkQuery";
+        self::assertResponseRedirects($linkUrl);
+
+        self::getClient()->request('GET', '/profile/link?code=the_code');
+        self::assertResponseRedirects('http://localhost'.$fromUrl);
+    }
+
+    public static function linkAccountRemembersRedirectLocationProvider(): array
+    {
+        return [
+            ['/'],
+            ['/series/incomplete'],
+            ['/series/complete'],
+            ['/series/dropped'],
+            ['/profile'],
+        ];
     }
 }

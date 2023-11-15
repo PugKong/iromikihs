@@ -6,7 +6,6 @@ namespace App\Twig\Component;
 
 use App\Entity\User;
 use App\Entity\UserSync;
-use App\Shikimori\Client\Config;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 
 #[AsTwigComponent]
@@ -14,13 +13,6 @@ final class SyncStatus
 {
     private User $user;
     private UserSync $sync;
-
-    private Config $config;
-
-    public function __construct(Config $config)
-    {
-        $this->config = $config;
-    }
 
     public function mount(User $user): void
     {
@@ -41,10 +33,5 @@ final class SyncStatus
     public function getState(): ?string
     {
         return $this->sync->getState()?->value;
-    }
-
-    public function getLinkUrl(): string
-    {
-        return $this->config->authUrl();
     }
 }
