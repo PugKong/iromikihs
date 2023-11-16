@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace App\Service\Shikimori;
 
 use App\Entity\User;
+use App\Service\Series\NameGpt;
 use App\Shikimori\Api\Anime\ItemRequest;
 use App\Shikimori\Api\Anime\RelatedRequest;
-use App\Shikimori\Api\BaseAnimeData;
 use App\Shikimori\Client\Shikimori;
-use DateTimeImmutable;
 
 use function array_key_exists;
 use function count;
@@ -22,20 +21,19 @@ final readonly class ShikimoriAnimesSeriesFetcher implements AnimeSeriesFetcher
 
     private TokenStorage $tokens;
     private Shikimori $shikimori;
+    private NameGpt $seriesNameGpt;
 
-    public function __construct(TokenStorage $tokens, Shikimori $shikimori)
+    public function __construct(TokenStorage $tokens, Shikimori $shikimori, NameGpt $seriesNameGpt)
     {
         $this->tokens = $tokens;
         $this->shikimori = $shikimori;
+        $this->seriesNameGpt = $seriesNameGpt;
     }
 
     public function __invoke(User $user, int $animeId): AnimeSeriesFetcherResult
     {
         $itemRequest = new ItemRequest($this->tokens->retrieve($user), $animeId);
         $item = $this->shikimori->request($itemRequest);
-
-        $seriesName = $item->name;
-        $seriesNameDate = $this->selectDate($item);
 
         $items = [$animeId => $item];
         $queue = [$item];
@@ -58,29 +56,14 @@ final readonly class ShikimoriAnimesSeriesFetcher implements AnimeSeriesFetcher
                     continue;
                 }
 
-                $date = $this->selectDate($anime);
-                if ($date < $seriesNameDate) {
-                    $seriesName = $anime->name;
-                }
-
                 $items[$anime->id] = $anime;
                 $queue[] = $anime;
             }
         }
 
-        return new AnimeSeriesFetcherResult($seriesName, array_values($items));
-    }
+        $items = array_values($items);
+        $seriesName = ($this->seriesNameGpt)($items);
 
-    private function selectDate(BaseAnimeData $data): DateTimeImmutable
-    {
-        if (null !== $data->airedOn) {
-            return $data->airedOn;
-        }
-
-        if (null !== $data->releasedOn) {
-            return $data->releasedOn;
-        }
-
-        return new DateTimeImmutable('tomorrow');
+        return new AnimeSeriesFetcherResult($seriesName, $items);
     }
 }

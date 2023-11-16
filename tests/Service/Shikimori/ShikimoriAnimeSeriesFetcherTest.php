@@ -74,7 +74,7 @@ final class ShikimoriAnimeSeriesFetcherTest extends ServiceTestCase
         $fetcher = self::getService(ShikimoriAnimesSeriesFetcher::class);
         $result = ($fetcher)($user->object(), $selectInitialId([$firstId, $secondId, $thirdId]));
 
-        self::assertSame($firstRelated->name, $result->seriesName);
+        self::assertSame('Anime', $result->seriesName);
         $shikimori->assertCalls(4);
 
         // due to clown fiesta I did with BaseAnimeData, let's do some morning work-out
