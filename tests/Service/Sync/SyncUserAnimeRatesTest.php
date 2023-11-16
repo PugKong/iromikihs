@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Service\Sync;
 
+use App\Entity\AnimeRateStatus;
 use App\Entity\UserSyncState;
 use App\Service\Sync\SyncUserAnimeRates;
 use App\Shikimori\Api\Enum\Kind;
@@ -104,11 +105,11 @@ final class SyncUserAnimeRatesTest extends ServiceTestCase
         $service = self::getService(SyncUserAnimeRates::class);
         ($service)($user->object());
 
-        $rate = AnimeRateFactory::find($id);
+        $rate = AnimeRateFactory::find(['shikimoriId' => $id]);
         self::assertEquals($user->getId(), $rate->getUser()->getId());
         self::assertSame($animeId, $rate->getAnime()->getId());
         self::assertSame($score, $rate->getScore());
-        self::assertSame($status, $rate->getStatus());
+        self::assertSame($status->value, $rate->getStatus()->value);
     }
 
     public function testUpdateRate(): void
@@ -119,11 +120,11 @@ final class SyncUserAnimeRatesTest extends ServiceTestCase
             ->create()
         ;
         $rate = AnimeRateFactory::createOne([
-            'id' => $id = 6610,
+            'shikimoriId' => $id = 6610,
             'user' => UserFactory::createOne(),
             'anime' => AnimeFactory::createOne(['id' => 6609]),
             'score' => 3,
-            'status' => UserAnimeStatus::WATCHING,
+            'status' => AnimeRateStatus::WATCHING,
         ]);
 
         $shikimori = self::getService(ShikimoriSpy::class);
@@ -145,7 +146,7 @@ final class SyncUserAnimeRatesTest extends ServiceTestCase
         self::assertEquals($user->getId(), $rate->getUser()->getId());
         self::assertSame($animeId, $rate->getAnime()->getId());
         self::assertSame($score, $rate->getScore());
-        self::assertSame($status, $rate->getStatus());
+        self::assertSame($status->value, $rate->getStatus()->value);
     }
 
     public function testDeleteRate(): void
@@ -155,7 +156,7 @@ final class SyncUserAnimeRatesTest extends ServiceTestCase
             ->withSyncStatus(state: UserSyncState::ANIME_RATES)
             ->create()
         ;
-        AnimeRateFactory::createOne(['user' => $user]);
+        AnimeRateFactory::createOne(['user' => $user, 'status' => AnimeRateStatus::DROPPED]);
 
         $shikimori = self::getService(ShikimoriSpy::class);
         $shikimori->addRequest(new AnimeRatesRequest($accessToken, $accountId), []);
@@ -164,6 +165,59 @@ final class SyncUserAnimeRatesTest extends ServiceTestCase
         ($service)($user->object());
 
         self::assertCount(0, AnimeRateFactory::all());
+    }
+
+    public function testKeepSkippedRate(): void
+    {
+        $user = UserFactory::new()
+            ->withLinkedAccount(accountId: $accountId = 6610, accessToken: $accessToken = 'the token')
+            ->withSyncStatus(state: UserSyncState::ANIME_RATES)
+            ->create()
+        ;
+        AnimeRateFactory::new()->skipped()->create(['user' => $user]);
+
+        $shikimori = self::getService(ShikimoriSpy::class);
+        $shikimori->addRequest(new AnimeRatesRequest($accessToken, $accountId), []);
+
+        $service = self::getService(SyncUserAnimeRates::class);
+        ($service)($user->object());
+
+        self::assertCount(1, AnimeRateFactory::all());
+    }
+
+    public function testUpdateSkippedRate(): void
+    {
+        $user = UserFactory::new()
+            ->withLinkedAccount(accountId: $accountId = 6610, accessToken: $accessToken = 'the token')
+            ->withSyncStatus(state: UserSyncState::ANIME_RATES)
+            ->create()
+        ;
+        $rate = AnimeRateFactory::new()->skipped()->create([
+            'user' => $user,
+            'anime' => AnimeFactory::createOne(['id' => $animeId = 6609]),
+            'score' => 0,
+        ]);
+
+        $shikimori = self::getService(ShikimoriSpy::class);
+        $shikimori->addRequest(
+            new AnimeRatesRequest($accessToken, $accountId),
+            [
+                new AnimeRatesResponse(
+                    id: $id = 6610,
+                    score: $score = 7,
+                    status: $status = UserAnimeStatus::COMPLETED,
+                    anime: self::createAnimeItem(AnimeRatesResponseAnimeItem::class, $animeId),
+                ),
+            ],
+        );
+
+        $service = self::getService(SyncUserAnimeRates::class);
+        ($service)($user->object());
+
+        self::assertSame($id, $rate->getShikimoriId());
+        self::assertSame($animeId, $rate->getAnime()->getId());
+        self::assertSame($score, $rate->getScore());
+        self::assertSame($status->value, $rate->getStatus()->value);
     }
 
     public function testChangeSyncState(): void

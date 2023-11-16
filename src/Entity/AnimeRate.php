@@ -5,19 +5,25 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Repository\AnimeRateRepository;
-use App\Shikimori\Api\Enum\UserAnimeStatus;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Uid\UuidV7;
 
 #[ORM\Entity(repositoryClass: AnimeRateRepository::class)]
+#[ORM\UniqueConstraint(columns: ['user_id', 'shikimori_id'])]
 class AnimeRate
 {
     #[ORM\Id]
-    #[ORM\Column]
-    private int $id;
+    #[ORM\Column(type: UuidType::NAME)]
+    private UuidV7 $id;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
     private User $user;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $shikimoriId;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
@@ -27,18 +33,16 @@ class AnimeRate
     private int $score;
 
     #[ORM\Column]
-    private UserAnimeStatus $status;
+    private AnimeRateStatus $status;
 
-    public function getId(): int
+    public function __construct()
     {
-        return $this->id;
+        $this->id = Uuid::v7();
     }
 
-    public function setId(int $id): self
+    public function getId(): UuidV7
     {
-        $this->id = $id;
-
-        return $this;
+        return $this->id;
     }
 
     public function getUser(): User
@@ -49,6 +53,18 @@ class AnimeRate
     public function setUser(User $user): self
     {
         $this->user = $user;
+
+        return $this;
+    }
+
+    public function getShikimoriId(): ?int
+    {
+        return $this->shikimoriId;
+    }
+
+    public function setShikimoriId(?int $shikimoriId): self
+    {
+        $this->shikimoriId = $shikimoriId;
 
         return $this;
     }
@@ -77,14 +93,18 @@ class AnimeRate
         return $this;
     }
 
-    public function getStatus(): UserAnimeStatus
+    public function getStatus(): AnimeRateStatus
     {
         return $this->status;
     }
 
-    public function setStatus(UserAnimeStatus $status): self
+    public function setStatus(AnimeRateStatus $status): self
     {
         $this->status = $status;
+        if (AnimeRateStatus::SKIPPED === $status) {
+            $this->setShikimoriId(null);
+            $this->setScore(0);
+        }
 
         return $this;
     }

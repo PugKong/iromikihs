@@ -57,10 +57,10 @@ class SyncUserAnimeRatesHandlerTest extends MessageHandlerTestCase
         $anime = AnimeFactory::find($animeId);
         self::assertBaseItemDataEqualsAnimeData($item, $anime->object());
 
-        $rate = AnimeRateFactory::find($rateId);
+        $rate = AnimeRateFactory::find(['shikimoriId' => $rateId]);
         self::assertEquals($user->getId(), $rate->getUser()->getId());
         self::assertSame($rateScore, $rate->getScore());
-        self::assertSame($rateStatus, $rate->getStatus());
+        self::assertSame($rateStatus->value, $rate->getStatus()->value);
 
         $messages = $this->transport('async')->queue()->messages(SyncUserSeriesMessage::class);
         self::assertCount(1, $messages);

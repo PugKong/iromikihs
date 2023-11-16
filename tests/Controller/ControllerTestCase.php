@@ -52,14 +52,14 @@ abstract class ControllerTestCase extends WebTestCase
     {
         $crawler = self::getClient()->getCrawler();
         $errors = $crawler->filter('section.bg-error')->each(fn (Crawler $c) => $c->text());
-        self::assertContains($message, $errors);
+        self::assertContains($message, $errors, sprintf('Got errors: %s', var_export($errors, true)));
     }
 
     public static function assertHasNoFlashError(string $message): void
     {
         $crawler = self::getClient()->getCrawler();
         $errors = $crawler->filter('section.bg-error')->each(fn (Crawler $c) => $c->text());
-        self::assertNotContains($message, $errors);
+        self::assertNotContains($message, $errors, sprintf('Got errors: %s', var_export($errors, true)));
     }
 
     public static function assertTable(string $selector, array $expectedHeaders, array $expectedBody): void

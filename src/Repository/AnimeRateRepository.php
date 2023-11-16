@@ -6,9 +6,11 @@ namespace App\Repository;
 
 use App\Entity\Anime;
 use App\Entity\AnimeRate;
+use App\Entity\AnimeRateStatus;
 use App\Entity\User;
 use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\Expr;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\UuidV7;
 
@@ -46,14 +48,16 @@ class AnimeRateRepository extends ServiceEntityRepository
      *
      * @return AnimeRate[]
      */
-    public function findByUserOrIdsIndexedById(User $user, array $ids): array
+    public function findByUserOrShikimoriIdsIndexedByShikimoriId(User $user, array $ids): array
     {
         /** @var AnimeRate[] $result */
         $result = $this
-            ->createQueryBuilder('r', 'r.id')
-            ->orWhere('r.user = :user')
+            ->createQueryBuilder('r', 'r.shikimoriId')
+            ->orWhere((new Expr())->andX('r.user = :user', 'r.shikimoriId IS NOT NULL'))
             ->setParameter('user', $user)
-            ->orWhere('r.id IN (:ids)')
+            ->orWhere('r.shikimoriId IN (:ids)')
+            ->andWhere('r.status != :skipped')
+            ->setParameter('skipped', AnimeRateStatus::SKIPPED)
             ->setParameter('ids', $ids)
             ->getQuery()
             ->getResult()

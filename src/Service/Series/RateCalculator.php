@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Service\Series;
 
+use App\Entity\AnimeRateStatus;
 use App\Entity\Series;
 use App\Entity\SeriesState;
 use App\Entity\User;
 use App\Repository\AnimeRateRepository;
 use App\Repository\AnimeRepository;
 use App\Shikimori\Api\Enum\Status;
-use App\Shikimori\Api\Enum\UserAnimeStatus;
 
 use function count;
 use function in_array;
@@ -38,13 +38,14 @@ final readonly class RateCalculator
         $scoreCount = 0;
         foreach ($rates as $rate) {
             if (in_array($rate->getStatus(), [
-                UserAnimeStatus::COMPLETED,
-                UserAnimeStatus::WATCHING,
-                UserAnimeStatus::REWATCHING,
+                AnimeRateStatus::COMPLETED,
+                AnimeRateStatus::WATCHING,
+                AnimeRateStatus::REWATCHING,
+                AnimeRateStatus::SKIPPED,
             ])) {
                 ++$completedOrWatchingCount;
             }
-            if (UserAnimeStatus::DROPPED === $rate->getStatus()) {
+            if (AnimeRateStatus::DROPPED === $rate->getStatus()) {
                 ++$droppedCount;
             }
             if (0 !== $rate->getScore()) {

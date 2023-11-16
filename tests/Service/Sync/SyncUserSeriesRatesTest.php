@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Service\Sync;
 
+use App\Entity\AnimeRateStatus;
 use App\Entity\SeriesState;
 use App\Entity\UserSyncState;
 use App\Service\Sync\SyncUserSeriesRates;
 use App\Shikimori\Api\Enum\Status;
-use App\Shikimori\Api\Enum\UserAnimeStatus;
 use App\Tests\Factory\AnimeFactory;
 use App\Tests\Factory\AnimeRateFactory;
 use App\Tests\Factory\SeriesFactory;
@@ -26,25 +26,26 @@ final class SyncUserSeriesRatesTest extends ServiceTestCase
     {
         return [
             'no rate' => [null],
-            'planned' => [UserAnimeStatus::PLANNED],
-            'on hold' => [UserAnimeStatus::ON_HOLD],
+            'planned' => [AnimeRateStatus::PLANNED],
+            'on hold' => [AnimeRateStatus::ON_HOLD],
         ];
     }
 
     public static function completeProvider(): array
     {
         return [
-            'watching' => [UserAnimeStatus::WATCHING],
-            'rewatching' => [UserAnimeStatus::REWATCHING],
-            'completed' => [UserAnimeStatus::COMPLETED],
-            'dropped' => [UserAnimeStatus::DROPPED],
+            'watching' => [AnimeRateStatus::WATCHING],
+            'rewatching' => [AnimeRateStatus::REWATCHING],
+            'completed' => [AnimeRateStatus::COMPLETED],
+            'dropped' => [AnimeRateStatus::DROPPED],
+            'skipped' => [AnimeRateStatus::SKIPPED],
         ];
     }
 
     /**
      * @dataProvider incompleteProvider
      */
-    public function testCreateIncompleteSeries(?UserAnimeStatus $status): void
+    public function testCreateIncompleteSeries(?AnimeRateStatus $status): void
     {
         $user = UserFactory::new()
             ->withLinkedAccount()
@@ -54,7 +55,7 @@ final class SyncUserSeriesRatesTest extends ServiceTestCase
         $series = SeriesFactory::createOne();
         $anime1 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
         $anime2 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
-        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime1, 'status' => UserAnimeStatus::COMPLETED]);
+        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime1, 'status' => AnimeRateStatus::COMPLETED]);
         if (null !== $status) {
             AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime2, 'status' => $status]);
         }
@@ -70,7 +71,7 @@ final class SyncUserSeriesRatesTest extends ServiceTestCase
     /**
      * @dataProvider completeProvider
      */
-    public function testCreateCompleteSeries(UserAnimeStatus $status): void
+    public function testCreateCompleteSeries(AnimeRateStatus $status): void
     {
         $user = UserFactory::new()
             ->withLinkedAccount()
@@ -80,7 +81,7 @@ final class SyncUserSeriesRatesTest extends ServiceTestCase
         $series = SeriesFactory::createOne();
         $anime1 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
         $anime2 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
-        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime1, 'status' => UserAnimeStatus::COMPLETED]);
+        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime1, 'status' => AnimeRateStatus::COMPLETED]);
         AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime2, 'status' => $status]);
 
         $service = self::getService(SyncUserSeriesRates::class);
@@ -104,8 +105,8 @@ final class SyncUserSeriesRatesTest extends ServiceTestCase
         $series = SeriesFactory::createOne();
         $anime1 = AnimeFactory::createOne(['series' => $series, 'status' => $status1]);
         $anime2 = AnimeFactory::createOne(['series' => $series, 'status' => $status2]);
-        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime1, 'status' => UserAnimeStatus::WATCHING]);
-        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime2, 'status' => UserAnimeStatus::WATCHING]);
+        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime1, 'status' => AnimeRateStatus::WATCHING]);
+        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime2, 'status' => AnimeRateStatus::WATCHING]);
 
         $service = self::getService(SyncUserSeriesRates::class);
         ($service)($user->object());
@@ -132,8 +133,8 @@ final class SyncUserSeriesRatesTest extends ServiceTestCase
         $series = SeriesFactory::createOne();
         $anime1 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
         $anime2 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
-        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime1, 'status' => UserAnimeStatus::DROPPED]);
-        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime2, 'status' => UserAnimeStatus::DROPPED]);
+        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime1, 'status' => AnimeRateStatus::DROPPED]);
+        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime2, 'status' => AnimeRateStatus::DROPPED]);
 
         $service = self::getService(SyncUserSeriesRates::class);
         ($service)($user->object());
@@ -145,7 +146,7 @@ final class SyncUserSeriesRatesTest extends ServiceTestCase
     /**
      * @dataProvider incompleteProvider
      */
-    public function testUpdateIncompleteSeries(?UserAnimeStatus $status): void
+    public function testUpdateIncompleteSeries(?AnimeRateStatus $status): void
     {
         $user = UserFactory::new()
             ->withLinkedAccount()
@@ -155,7 +156,7 @@ final class SyncUserSeriesRatesTest extends ServiceTestCase
         $series = SeriesFactory::createOne();
         $anime1 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
         $anime2 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
-        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime1, 'status' => UserAnimeStatus::COMPLETED]);
+        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime1, 'status' => AnimeRateStatus::COMPLETED]);
         if (null !== $status) {
             AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime2, 'status' => $status]);
         }
@@ -174,7 +175,7 @@ final class SyncUserSeriesRatesTest extends ServiceTestCase
     /**
      * @dataProvider completeProvider
      */
-    public function testUpdateCompleteSeries(UserAnimeStatus $status): void
+    public function testUpdateCompleteSeries(AnimeRateStatus $status): void
     {
         $user = UserFactory::new()
             ->withLinkedAccount()
@@ -184,7 +185,7 @@ final class SyncUserSeriesRatesTest extends ServiceTestCase
         $series = SeriesFactory::createOne();
         $anime1 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
         $anime2 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
-        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime1, 'status' => UserAnimeStatus::COMPLETED]);
+        AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime1, 'status' => AnimeRateStatus::COMPLETED]);
         AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime2, 'status' => $status]);
         $seriesRate = SeriesRateFactory::createOne([
             'user' => $user,
@@ -211,13 +212,13 @@ final class SyncUserSeriesRatesTest extends ServiceTestCase
         AnimeRateFactory::createOne([
             'user' => $user,
             'anime' => $anime1,
-            'status' => UserAnimeStatus::COMPLETED,
+            'status' => AnimeRateStatus::COMPLETED,
             'score' => 5,
         ]);
         AnimeRateFactory::createOne([
             'user' => $user,
             'anime' => $anime2,
-            'status' => UserAnimeStatus::COMPLETED,
+            'status' => AnimeRateStatus::COMPLETED,
             'score' => 6,
         ]);
 
@@ -241,13 +242,13 @@ final class SyncUserSeriesRatesTest extends ServiceTestCase
         AnimeRateFactory::createOne([
             'user' => $user,
             'anime' => $anime1,
-            'status' => UserAnimeStatus::COMPLETED,
+            'status' => AnimeRateStatus::COMPLETED,
             'score' => 0,
         ]);
         AnimeRateFactory::createOne([
             'user' => $user,
             'anime' => $anime2,
-            'status' => UserAnimeStatus::COMPLETED,
+            'status' => AnimeRateStatus::COMPLETED,
             'score' => 0,
         ]);
 
@@ -325,7 +326,7 @@ final class SyncUserSeriesRatesTest extends ServiceTestCase
         AnimeRateFactory::createOne([
             'user' => $user,
             'anime' => $completedAnime,
-            'status' => UserAnimeStatus::COMPLETED,
+            'status' => AnimeRateStatus::COMPLETED,
         ]);
         SeriesRateFactory::createOne([
             'user' => $user,

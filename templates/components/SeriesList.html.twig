@@ -36,7 +36,7 @@
         <div class="mt-2">
           <div class="series-list-item join">
             {% set animeRate = this.animeRate(anime) %}
-            {% if animeRate is not null %}
+            {% if animeRate is not null and animeRate.status.value != 'skipped' %}
               {% if animeRate.score != 0 %}
                 <a class="btn btn-sm btn-primary cursor-default join-item">
                   {{ starIcon }}
@@ -46,8 +46,22 @@
               {% if animeRate.status.value != 'completed' %}
                 <a class="btn btn-sm btn-accent cursor-default join-item">{{ animeRate.status.value }}</a>
               {% endif %}
+            {% elseif animeRate is not null %}
+              <twig:SimpleForm
+                action="{{ path('app_anime_observe', {anime: anime.id}) }}"
+                class="btn btn-sm btn-secondary underline join-item"
+                disabled="{{ this.user.sync.inProgress }}"
+              >
+                <span class="uppercase">Observe</span>
+              </twig:SimpleForm>
             {% else %}
-              <a class="btn btn-sm btn-secondary underline join-item">Skip</a>
+              <twig:SimpleForm
+                action="{{ path('app_anime_skip', {anime: anime.id}) }}"
+                class="btn btn-sm btn-secondary underline join-item"
+                disabled="{{ this.user.sync.inProgress }}"
+              >
+                <span class="uppercase">Skip</span>
+              </twig:SimpleForm>
             {% endif %}
 
             {% if anime.kind is not null %}

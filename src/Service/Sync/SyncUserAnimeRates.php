@@ -6,6 +6,7 @@ namespace App\Service\Sync;
 
 use App\Entity\Anime;
 use App\Entity\AnimeRate;
+use App\Entity\AnimeRateStatus;
 use App\Entity\User;
 use App\Entity\UserSyncState;
 use App\Message\SyncUserSeriesMessage;
@@ -57,25 +58,26 @@ final readonly class SyncUserAnimeRates
         $ratesData = $this->shikimori->request($request);
 
         $rateIds = array_map(fn (AnimeRatesResponse $r) => $r->id, $ratesData);
-        $syncRates = $this->rates->findByUserOrIdsIndexedById($user, $rateIds);
-
+        $shikimoriRates = $this->rates->findByUserOrShikimoriIdsIndexedByShikimoriId($user, $rateIds);
+        $appRates = $this->findAppRatesIndexedByAnimeId($user);
         foreach ($ratesData as $rateData) {
             $anime = $this->animes->findOrNew($rateData->anime->id);
             $anime->updateFromBaseData($rateData->anime);
             $this->entityManager->persist($anime);
 
-            if (array_key_exists($rateData->id, $syncRates)) {
-                $rate = $syncRates[$rateData->id];
-                unset($syncRates[$rateData->id]);
+            if (array_key_exists($rateData->id, $shikimoriRates)) {
+                $rate = $shikimoriRates[$rateData->id];
+                unset($shikimoriRates[$rateData->id]);
+            } elseif (array_key_exists($rateData->anime->id, $appRates)) {
+                $rate = $appRates[$rateData->anime->id];
             } else {
                 $rate = new AnimeRate();
-                $rate->setId($rateData->id);
             }
             $this->setRateData($rate, $rateData, $user, $anime);
             $this->entityManager->persist($rate);
         }
 
-        foreach ($syncRates as $rate) {
+        foreach ($shikimoriRates as $rate) {
             $this->entityManager->remove($rate);
         }
 
@@ -87,11 +89,26 @@ final readonly class SyncUserAnimeRates
         $this->bus->dispatch(new SyncUserSeriesMessage($user->getId()));
     }
 
+    /**
+     * @return array<int, AnimeRate>
+     */
+    private function findAppRatesIndexedByAnimeId(User $user): array
+    {
+        $rates = $this->rates->findBy(['user' => $user, 'status' => AnimeRateStatus::SKIPPED]);
+        $result = [];
+        foreach ($rates as $rate) {
+            $result[$rate->getAnime()->getId()] = $rate;
+        }
+
+        return $result;
+    }
+
     private function setRateData(AnimeRate $rate, AnimeRatesResponse $data, User $user, Anime $anime): void
     {
         $rate->setUser($user);
+        $rate->setShikimoriId($data->id);
         $rate->setAnime($anime);
         $rate->setScore($data->score);
-        $rate->setStatus($data->status);
+        $rate->setStatus(AnimeRateStatus::fromUserAnimeStatus($data->status));
     }
 }

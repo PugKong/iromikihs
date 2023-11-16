@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Factory;
 
 use App\Entity\AnimeRate;
-use App\Shikimori\Api\Enum\UserAnimeStatus;
+use App\Entity\AnimeRateStatus;
 use Zenstruck\Foundry\ModelFactory;
 use Zenstruck\Foundry\Proxy;
 
@@ -29,14 +29,22 @@ use Zenstruck\Foundry\Proxy;
  */
 final class AnimeRateFactory extends ModelFactory
 {
+    public function skipped(): self
+    {
+        return $this->addState([
+            'shikimoriId' => null,
+            'status' => AnimeRateStatus::SKIPPED,
+        ]);
+    }
+
     protected function getDefaults(): array
     {
         return [
-            'id' => self::faker()->unique()->numberBetween(),
+            'shikimoriId' => self::faker()->unique()->numberBetween(),
             'user' => UserFactory::new(),
             'anime' => AnimeFactory::new(),
             'score' => self::faker()->randomNumber(),
-            'status' => self::faker()->randomElement(UserAnimeStatus::cases()),
+            'status' => self::faker()->randomElement(AnimeRateStatus::cases()),
         ];
     }
 
