@@ -5,26 +5,5 @@
 {% block content %}
   <twig:PageHeader>Anime list</twig:PageHeader>
 
-  <table class="anime-list table bg-base-200 rounded-box mt-4">
-    <thead>
-    <tr>
-      <th>Name</th>
-      <th>Kind</th>
-      <th>Status</th>
-      <th>Progress</th>
-      <th>Score</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for rate in userRates %}
-      <tr>
-        <td>{{ rate.anime.name }}</td>
-        <td>{{ rate.anime.kind.value }}</td>
-        <td>{{ rate.anime.status.value }}</td>
-        <td>{{ rate.status.value }}</td>
-        <td>{{ rate.score }}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
+  <twig:AnimeList items="{{ userRatedAnimes }}" />
 {% endblock %}

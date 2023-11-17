@@ -22,16 +22,19 @@ use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 #[IsGranted('ROLE_USER')]
 final class AnimeController extends AbstractController
 {
     #[Route('/', name: 'app_anime_index')]
-    public function index(#[CurrentUser] User $user, AnimeRateRepository $rates): Response
+    public function index(#[CurrentUser] User $user, AnimeRateRepository $rates, Stopwatch $stopwatch): Response
     {
-        $userRates = $rates->findByUserWithAnime($user);
+        $stopwatch->start($watchName = 'user rates load');
+        $userRatedAnimes = $rates->findUserRatedAnime($user);
+        $stopwatch->stop($watchName);
 
-        return $this->render('anime/index.html.twig', ['userRates' => $userRates]);
+        return $this->render('anime/index.html.twig', ['userRatedAnimes' => $userRatedAnimes]);
     }
 
     #[Route('/animes/{anime}/skip', name: 'app_anime_skip', methods: [Request::METHOD_POST])]

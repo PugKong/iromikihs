@@ -79,7 +79,7 @@ abstract class ControllerTestCase extends WebTestCase
 
         $actualBody = $table->filterXPath('//tbody/tr')->each(
             fn (Crawler $row): array => $row
-                ->filterXPath('//td')->each(
+                ->filterXPath('//td|//th')->each(
                     fn (Crawler $cell) => $cell->text(),
                 ),
         );

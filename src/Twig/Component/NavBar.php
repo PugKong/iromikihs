@@ -6,6 +6,7 @@ namespace App\Twig\Component;
 
 use App\Entity\SeriesState;
 use App\Entity\User;
+use App\Repository\AnimeRateRepository;
 use App\Repository\SeriesRateRepository;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 
@@ -18,10 +19,12 @@ final class NavBar
     private User $user;
     private string $route;
 
+    private AnimeRateRepository $animeRates;
     private SeriesRateRepository $seriesRates;
 
-    public function __construct(SeriesRateRepository $seriesRates)
+    public function __construct(AnimeRateRepository $animeRates, SeriesRateRepository $seriesRates)
     {
+        $this->animeRates = $animeRates;
         $this->seriesRates = $seriesRates;
     }
 
@@ -38,7 +41,11 @@ final class NavBar
     {
         $items = [];
 
-        $items[] = $this->makeItem('app_anime_index', 'Anime list');
+        $items[] = $this->makeItem(
+            'app_anime_index',
+            'Anime list',
+            $this->animeRates->count(['user' => $this->user]),
+        );
         $items[] = $this->makeItem(
             'app_series_incomplete',
             'Incomplete series',

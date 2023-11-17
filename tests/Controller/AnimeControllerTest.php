@@ -45,16 +45,69 @@ final class AnimeControllerTest extends ControllerTestCase
     {
         $user = UserFactory::new()->withLinkedAccount()->create();
 
-        $anime = AnimeFactory::createOne([
-            'name' => $animeName = 'The anime',
-            'kind' => $animeKind = Kind::MOVIE,
-            'status' => $animeStatus = Status::RELEASED,
+        $rateFactory = AnimeRateFactory::new(['user' => $user]);
+        $rateFactory->create([
+            'anime' => AnimeFactory::new([
+                'name' => 'Watching',
+                'kind' => Kind::MOVIE,
+                'status' => Status::RELEASED,
+            ]),
+            'status' => AnimeRateStatus::WATCHING,
+            'score' => 9,
         ]);
-        AnimeRateFactory::createOne([
-            'user' => $user,
-            'anime' => $anime,
-            'status' => $rateProgress = AnimeRateStatus::WATCHING,
-            'score' => $rateScore = 9,
+        $rateFactory->create([
+            'anime' => AnimeFactory::new([
+                'name' => 'Rewatching',
+                'kind' => Kind::MOVIE,
+                'status' => Status::RELEASED,
+            ]),
+            'status' => AnimeRateStatus::REWATCHING,
+            'score' => 8,
+        ]);
+        $rateFactory->create([
+            'anime' => AnimeFactory::new([
+                'name' => 'On hold',
+                'kind' => Kind::TV,
+                'status' => Status::ONGOING,
+            ]),
+            'status' => AnimeRateStatus::ON_HOLD,
+            'score' => 7,
+        ]);
+        $rateFactory->create([
+            'anime' => AnimeFactory::new([
+                'name' => 'Planned',
+                'kind' => Kind::OVA,
+                'status' => Status::ANONS,
+            ]),
+            'status' => AnimeRateStatus::PLANNED,
+            'score' => 6,
+        ]);
+        $rateFactory->create([
+            'anime' => AnimeFactory::new([
+                'name' => 'Completed',
+                'kind' => Kind::ONA,
+                'status' => Status::RELEASED,
+            ]),
+            'status' => AnimeRateStatus::COMPLETED,
+            'score' => 5,
+        ]);
+        $rateFactory->create([
+            'anime' => AnimeFactory::new([
+                'name' => 'Skipped',
+                'kind' => Kind::TV,
+                'status' => Status::RELEASED,
+            ]),
+            'status' => AnimeRateStatus::SKIPPED,
+            'score' => 0,
+        ]);
+        $rateFactory->create([
+            'anime' => AnimeFactory::new([
+                'name' => 'Dropped',
+                'kind' => Kind::TV,
+                'status' => Status::RELEASED,
+            ]),
+            'status' => AnimeRateStatus::DROPPED,
+            'score' => 3,
         ]);
 
         self::getClient()
@@ -70,8 +123,21 @@ final class AnimeControllerTest extends ControllerTestCase
 
         self::assertTable(
             'table.anime-list',
-            [['Name', 'Kind', 'Status', 'Progress', 'Score']],
-            [[$animeName, $animeKind->value, $animeStatus->value, $rateProgress->value, (string) $rateScore]],
+            [['Name', 'Kind', 'Status', 'Score']],
+            [
+                ['Watching / Rewatching 2'],
+                ['Rewatching', 'movie', 'released', '8'],
+                ['Watching', 'movie', 'released', '9'],
+                ['On hold 1'],
+                ['On hold', 'tv', 'ongoing', '7'],
+                ['Planned 1'],
+                ['Planned', 'ova', 'anons', '6'],
+                ['Completed 1'],
+                ['Completed', 'ona', 'released', '5'],
+                ['Dropped / Skipped 2'],
+                ['Dropped', 'tv', 'released', '3'],
+                ['Skipped', 'tv', 'released', '—'],
+            ],
         );
     }
 
@@ -87,12 +153,13 @@ final class AnimeControllerTest extends ControllerTestCase
         ;
         self::assertResponseIsSuccessful();
 
-        self::assertTableRowsCount('table.anime-list', $rates);
+        $staticRowsCount = 5;
+        self::assertTableRowsCount('table.anime-list', $staticRowsCount + $rates);
 
         // 1 request to fetch user
-        // 3 requests to build nav bar
+        // 4 requests to build nav bar
         // 1 request to load page data
-        self::assertSame(5, self::dbCollector()->getQueryCount());
+        self::assertSame(6, self::dbCollector()->getQueryCount());
     }
 
     /**

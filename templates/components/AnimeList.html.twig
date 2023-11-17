@@ -1,0 +1,19 @@
+<section class="mt-4">
+  <table class="anime-list table bg-base-200 rounded-box shadow-lg shadow-base-300 mt-4">
+    <thead>
+    <tr>
+      <th>Name</th>
+      <th>Kind</th>
+      <th>Status</th>
+      <th>Score</th>
+    </tr>
+    </thead>
+    <tbody>
+    <twig:AnimeListGroup title="Watching / Rewatching" items="{{ this.watchingOrRewatching }}" />
+    <twig:AnimeListGroup title="On hold" items="{{ this.onHold }}" />
+    <twig:AnimeListGroup title="Planned" items="{{ this.planned }}" />
+    <twig:AnimeListGroup title="Completed" items="{{ this.completed }}" />
+    <twig:AnimeListGroup title="Dropped / Skipped" items="{{ this.droppedOrSKipped }}" />
+    </tbody>
+  </table>
+</section>

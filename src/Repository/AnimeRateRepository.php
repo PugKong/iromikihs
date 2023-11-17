@@ -25,17 +25,21 @@ class AnimeRateRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return AnimeRate[]
+     * @return UserRatedAnime[]
      */
-    public function findByUserWithAnime(User $user): array
+    public function findUserRatedAnime(User $user): array
     {
-        /** @var AnimeRate[] $result */
+        /** @var UserRatedAnime[] $result */
         $result = $this
             ->createQueryBuilder('r')
-            ->addSelect('a')
+            ->select(sprintf(
+                'NEW %s(a.name, a.kind, a.status, a.url, r.status, r.score)',
+                UserRatedAnime::class,
+            ))
             ->join('r.anime', 'a')
             ->where('r.user = :user')
             ->setParameter('user', $user)
+            ->orderBy('a.name')
             ->getQuery()
             ->getResult()
         ;
