@@ -1,41 +1,46 @@
-{% set starIcon %} {# saves ~20ms of page rendering time of ~100 series in dev env #}
+{% set starIcon %}
   <twig:Icon:Star />
 {% endset %}
+
+{% set csrfName = constant('App\\Twig\\Component\\SimpleForm::CSRF_TOKEN_FIELD') %}
+{% set csrfValue = csrf_token(constant('App\\Twig\\Component\\SimpleForm::CSRF_TOKEN_ID')) %}
 
 <section class="series-list columns-2 mt-4">
   {% for series in this.series %}
     <div class="bg-base-200 rounded-box shadow-lg shadow-base-300 mb-5 p-5 break-inside-avoid">
       <h1 class="text-2xl font-bold">{{ series.name }}</h1>
 
-      <div class="join my-4">
-        {% set seriesRate = this.seriesRate(series) %}
+      {% set seriesRate = this.seriesRate(series) %}
+      {% if not seriesRate.dropped %}
+        {% set action = path('app_series_drop', {seriesRate: seriesRate.id}) %}
+      {% else %}
+        {% set action = path('app_series_restore', {seriesRate: seriesRate.id}) %}
+      {% endif %}
+      <form method="post" action="{{ action }}" class="join my-4">
         <span class="btn btn-sm btn-primary cursor-default join-item">
           {{ starIcon }}
           {{ seriesRate.score|round(2) }}
         </span>
-        {% if not seriesRate.dropped %}
-          <twig:SimpleForm
-            action="{{ path('app_series_drop', {seriesRate: seriesRate.id}) }}"
-            class="btn btn-sm btn-secondary underline join-item"
-            disabled="{{ this.user.sync.inProgress }}"
-          >
-            <span class="uppercase">Drop series</span>
-          </twig:SimpleForm>
-        {% else %}
-          <twig:SimpleForm
-            action="{{ path('app_series_restore', {seriesRate: seriesRate.id}) }}"
-            class="btn btn-sm btn-secondary underline join-item"
-            disabled="{{ this.user.sync.inProgress }}"
-          >
-            <span class="uppercase">Restore series</span>
-          </twig:SimpleForm>
-        {% endif %}
-      </div>
+        <input type="hidden" name="{{ csrfName }}" value="{{ csrfValue }}" />
+        <button
+          class="btn btn-sm btn-secondary underline join-item"
+          {% if this.user.sync.inProgress %}disabled{% endif %}
+        >
+          {% if not seriesRate.dropped %}Drop series{% else %}Restore series{% endif %}
+        </button>
+      </form>
 
       {% for anime in this.animesBySeries(series) %}
-        <div class="mt-2">
-          <div class="series-list-item join">
-            {% set animeRate = this.animeRate(anime) %}
+        <div class="series-list-item mt-2">
+          {% set animeRate = this.animeRate(anime) %}
+          {% if animeRate is not null and animeRate.status.value != 'skipped' %}
+            {% set action = '' %}
+          {% elseif animeRate is not null %}
+            {% set action = path('app_anime_observe', {anime: anime.id}) %}
+          {% else %}
+            {% set action = path('app_anime_skip', {anime: anime.id}) %}
+          {% endif %}
+          <form method="post" action="{{ action }}" class="join">
             {% if animeRate is not null and animeRate.status.value != 'skipped' %}
               {% if animeRate.score != 0 %}
                 <a class="btn btn-sm btn-primary cursor-default join-item">
@@ -47,22 +52,20 @@
                 <a class="btn btn-sm btn-accent cursor-default join-item">{{ animeRate.status.value }}</a>
               {% endif %}
             {% elseif animeRate is not null %}
-              <twig:SimpleForm
-                action="{{ path('app_anime_observe', {anime: anime.id}) }}"
+              <button
                 class="btn btn-sm btn-secondary underline join-item"
-                disabled="{{ this.user.sync.inProgress }}"
-              >
-                <span class="uppercase">Observe</span>
-              </twig:SimpleForm>
+                {% if this.user.sync.inProgress %}disabled{% endif %}
+              >Observe
+              </button>
             {% else %}
-              <twig:SimpleForm
-                action="{{ path('app_anime_skip', {anime: anime.id}) }}"
+              <button
                 class="btn btn-sm btn-secondary underline join-item"
-                disabled="{{ this.user.sync.inProgress }}"
-              >
-                <span class="uppercase">Skip</span>
-              </twig:SimpleForm>
+                {% if this.user.sync.inProgress %}disabled{% endif %}
+              >Skip
+              </button>
             {% endif %}
+
+            <input type="hidden" name="{{ csrfName }}" value="{{ csrfValue }}" />
 
             {% if anime.kind is not null %}
               <span class="btn btn-sm btn-primary cursor-default join-item">{{ anime.kind.value }}</span>
@@ -80,7 +83,7 @@
                 {{ this.tryShorteningAnimeNameLength(series, anime) }}
               </span>
             </a>
-          </div>
+          </form>
         </div>
       {% endfor %}
     </div>
