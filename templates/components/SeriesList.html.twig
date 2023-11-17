@@ -10,48 +10,46 @@
     <div class="bg-base-200 rounded-box shadow-lg shadow-base-300 mb-5 p-5 break-inside-avoid">
       <h1 class="text-2xl font-bold">{{ series.name }}</h1>
 
-      {% set seriesRate = this.seriesRate(series) %}
-      {% if not seriesRate.dropped %}
-        {% set action = path('app_series_drop', {seriesRate: seriesRate.id}) %}
+      {% if series.state.value != 'dropped' %}
+        {% set action = path('app_series_drop', {seriesRate: series.seriesRateId}) %}
       {% else %}
-        {% set action = path('app_series_restore', {seriesRate: seriesRate.id}) %}
+        {% set action = path('app_series_restore', {seriesRate: series.seriesRateId}) %}
       {% endif %}
       <form method="post" action="{{ action }}" class="join my-4">
         <span class="btn btn-sm btn-primary cursor-default join-item">
           {{ starIcon }}
-          {{ seriesRate.score|round(2) }}
+          {{ series.score|round(2) }}
         </span>
         <input type="hidden" name="{{ csrfName }}" value="{{ csrfValue }}" />
         <button
           class="btn btn-sm btn-secondary underline join-item"
           {% if this.user.sync.inProgress %}disabled{% endif %}
         >
-          {% if not seriesRate.dropped %}Drop series{% else %}Restore series{% endif %}
+          {% if series.state.value != 'dropped' %}Drop series{% else %}Restore series{% endif %}
         </button>
       </form>
 
-      {% for anime in this.animesBySeries(series) %}
+      {% for anime in series.animes %}
         <div class="series-list-item mt-2">
-          {% set animeRate = this.animeRate(anime) %}
-          {% if animeRate is not null and animeRate.status.value != 'skipped' %}
+          {% if anime.state is not null and anime.state.value != 'skipped' %}
             {% set action = '' %}
-          {% elseif animeRate is not null %}
+          {% elseif anime.state is not null %}
             {% set action = path('app_anime_observe', {anime: anime.id}) %}
           {% else %}
             {% set action = path('app_anime_skip', {anime: anime.id}) %}
           {% endif %}
           <form method="post" action="{{ action }}" class="join">
-            {% if animeRate is not null and animeRate.status.value != 'skipped' %}
-              {% if animeRate.score != 0 %}
+            {% if anime.state is not null and anime.state.value != 'skipped' %}
+              {% if anime.score != 0 %}
                 <a class="btn btn-sm btn-primary cursor-default join-item">
                   {{ starIcon }}
-                  {{ animeRate.score }}
+                  {{ anime.score }}
                 </a>
               {% endif %}
-              {% if animeRate.status.value != 'completed' %}
-                <a class="btn btn-sm btn-accent cursor-default join-item">{{ animeRate.status.value }}</a>
+              {% if anime.state.value != 'completed' %}
+                <a class="btn btn-sm btn-accent cursor-default join-item">{{ anime.state.value }}</a>
               {% endif %}
-            {% elseif animeRate is not null %}
+            {% elseif anime.state is not null %}
               <button
                 class="btn btn-sm btn-secondary underline join-item"
                 {% if this.user.sync.inProgress %}disabled{% endif %}
@@ -74,7 +72,7 @@
               <span class="btn btn-sm btn-accent cursor-default join-item">{{ anime.status.value }}</span>
             {% endif %}
 
-            {% set animeCompleted = animeRate is not null and animeRate.status.value == 'completed' %}
+            {% set animeCompleted = anime.state is not null and anime.state.value == 'completed' %}
             <a href="{{ this.url(anime) }}" class="{{ html_classes('btn', 'btn-sm', 'underline', 'join-item', {
               'btn-success': animeCompleted,
               'btn-warning': not animeCompleted,

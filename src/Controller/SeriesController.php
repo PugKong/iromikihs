@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\SeriesRate;
+use App\Entity\SeriesState;
 use App\Entity\User;
+use App\Service\Anime\GetUserSeriesList\GetUserSeriesList;
 use App\Service\Exception\UserHasSyncInProgressException;
 use App\Service\Series\Drop;
 use App\Service\Series\Restore;
@@ -18,26 +20,39 @@ use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 #[IsGranted('ROLE_USER')]
 final class SeriesController extends AbstractController
 {
     #[Route('/series/incomplete', name: 'app_series_incomplete')]
-    public function incomplete(): Response
+    public function incomplete(#[CurrentUser] User $user, GetUserSeriesList $getUserSeriesList, Stopwatch $stopwatch): Response
     {
-        return $this->render('series/incomplete.html.twig');
+        $stopwatch->start($watchName = 'series list load');
+        $series = ($getUserSeriesList)($user, SeriesState::INCOMPLETE);
+        $stopwatch->stop($watchName);
+
+        return $this->render('series/incomplete.html.twig', ['series' => $series]);
     }
 
     #[Route('/series/complete', name: 'app_series_complete')]
-    public function complete(): Response
+    public function complete(#[CurrentUser] User $user, GetUserSeriesList $getUserSeriesList, Stopwatch $stopwatch): Response
     {
-        return $this->render('series/complete.html.twig');
+        $stopwatch->start($watchName = 'series list load');
+        $series = ($getUserSeriesList)($user, SeriesState::COMPLETE);
+        $stopwatch->stop($watchName);
+
+        return $this->render('series/complete.html.twig', ['series' => $series]);
     }
 
     #[Route('/series/dropped', name: 'app_series_dropped')]
-    public function dropped(): Response
+    public function dropped(#[CurrentUser] User $user, GetUserSeriesList $getUserSeriesList, Stopwatch $stopwatch): Response
     {
-        return $this->render('series/dropped.html.twig');
+        $stopwatch->start($watchName = 'series list load');
+        $series = ($getUserSeriesList)($user, SeriesState::DROPPED);
+        $stopwatch->stop($watchName);
+
+        return $this->render('series/dropped.html.twig', ['series' => $series]);
     }
 
     #[Route('/series/rates/{seriesRate}/drop', name: 'app_series_drop', methods: [Request::METHOD_POST])]

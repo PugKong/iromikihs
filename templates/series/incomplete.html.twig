@@ -5,5 +5,5 @@
 {% block content %}
   <twig:PageHeader>Incomplete series</twig:PageHeader>
 
-  <twig:SeriesList user="{{ app.user }}" state="incomplete" />
+  <twig:SeriesList user="{{ app.user }}" series="{{ series }}" />
 {% endblock %}

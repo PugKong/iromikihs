@@ -4,14 +4,9 @@ declare(strict_types=1);
 
 namespace App\Twig\Component;
 
-use App\Entity\Anime;
-use App\Entity\AnimeRate;
-use App\Entity\Series;
-use App\Entity\SeriesRate;
-use App\Entity\SeriesState;
 use App\Entity\User;
-use App\Service\Anime\GetUserSeriesList;
-use App\Service\Anime\GetUserSeriesListResult;
+use App\Service\Anime\GetUserSeriesList\AnimeResult;
+use App\Service\Anime\GetUserSeriesList\SeriesResult;
 use App\Shikimori\Client\Config;
 use Symfony\Component\String\UnicodeString;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
@@ -19,67 +14,48 @@ use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 #[AsTwigComponent]
 final class SeriesList
 {
-    private GetUserSeriesListResult $list;
     private User $user;
+    /** @var SeriesResult[] */
+    private array $series;
 
     private Config $config;
-    private GetUserSeriesList $getUserSeriesList;
 
-    public function __construct(
-        Config $config,
-        GetUserSeriesList $getUserSeriesList,
-    ) {
-        $this->config = $config;
-        $this->getUserSeriesList = $getUserSeriesList;
-    }
-
-    public function mount(User $user, string $state): void
+    public function __construct(Config $config)
     {
-        $state = SeriesState::from($state);
-        $this->list = ($this->getUserSeriesList)($user, $state);
-        $this->user = $user;
+        $this->config = $config;
     }
 
     /**
-     * @return Series[]
+     * @param SeriesResult[] $series
+     */
+    public function mount(User $user, array $series): void
+    {
+        $this->user = $user;
+        $this->series = $series;
+    }
+
+    /**
+     * @return SeriesResult[]
      */
     public function getSeries(): array
     {
-        return $this->list->getSeries();
+        return $this->series;
     }
 
-    public function getSeriesRate(Series $series): SeriesRate
+    public function getUrl(AnimeResult $anime): string
     {
-        return $this->list->getSeriesRate($series);
+        return $this->config->baseUrl.$anime->url;
     }
 
-    /**
-     * @return Anime[]
-     */
-    public function getAnimesBySeries(Series $series): array
+    public function tryShorteningAnimeNameLength(SeriesResult $series, AnimeResult $anime): string
     {
-        return $this->list->getAnimesBySeries($series);
-    }
-
-    public function getAnimeRate(Anime $anime): ?AnimeRate
-    {
-        return $this->list->getAnimeRate($anime);
-    }
-
-    public function getUrl(Anime $anime): string
-    {
-        return $this->config->baseUrl.$anime->getUrl();
-    }
-
-    public function tryShorteningAnimeNameLength(Series $series, Anime $anime): string
-    {
-        $animeName = new UnicodeString($anime->getName());
+        $animeName = new UnicodeString($anime->name);
         $animeName = $animeName->lower();
         if ($animeName->length() <= 32) {
-            return $anime->getName();
+            return $anime->name;
         }
 
-        $seriesName = new UnicodeString($series->getName());
+        $seriesName = new UnicodeString($series->name);
         $seriesName = $seriesName->lower();
         $commonPrefixLength = 0;
         for ($i = 0; $i < $seriesName->length() && $i < $animeName->length(); ++$i) {
@@ -91,7 +67,7 @@ final class SeriesList
         }
 
         if ($animeName->length() - $commonPrefixLength < 4) {
-            return $anime->getName();
+            return $anime->name;
         }
 
         return $animeName->slice($commonPrefixLength)->trim(' :-')->toString();
