@@ -5,85 +5,89 @@
 {% set csrfName = constant('App\\Twig\\Component\\SimpleForm::CSRF_TOKEN_FIELD') %}
 {% set csrfValue = csrf_token(constant('App\\Twig\\Component\\SimpleForm::CSRF_TOKEN_ID')) %}
 
+{% set syncInProgress = this.user.sync.inProgress %}
+
 <section class="series-list columns-2 mt-4">
   {% for series in this.series %}
-    <div class="bg-base-200 rounded-box shadow-lg shadow-base-300 mb-5 p-5 break-inside-avoid">
-      <h1 class="text-2xl font-bold">{{ series.name }}</h1>
+    <div class="series-list-item bg-base-200 rounded-box shadow-lg shadow-base-300 mb-5 p-5 break-inside-avoid">
+      <h2 class="text-2xl font-bold">{{ series.name }}</h2>
 
       {% if series.state.value != 'dropped' %}
         {% set action = path('app_series_drop', {seriesRate: series.seriesRateId}) %}
       {% else %}
         {% set action = path('app_series_restore', {seriesRate: series.seriesRateId}) %}
       {% endif %}
-      <form method="post" action="{{ action }}" class="join my-4">
+      <form method="post" action="{{ action }}" class="series-controls join my-4">
         <span class="btn btn-sm btn-primary cursor-default join-item">
           {{ starIcon }}
           {{ series.score|round(2) }}
         </span>
+
         <input type="hidden" name="{{ csrfName }}" value="{{ csrfValue }}" />
+
         <button
           class="btn btn-sm btn-secondary underline join-item"
-          {% if this.user.sync.inProgress %}disabled{% endif %}
+          {% if syncInProgress %}disabled{% endif %}
         >
           {% if series.state.value != 'dropped' %}Drop series{% else %}Restore series{% endif %}
         </button>
       </form>
 
-      {% for anime in series.animes %}
-        <div class="series-list-item mt-2">
-          {% if anime.state is not null and anime.state.value != 'skipped' %}
-            {% set action = '' %}
-          {% elseif anime.state is not null %}
-            {% set action = path('app_anime_observe', {anime: anime.id}) %}
-          {% else %}
-            {% set action = path('app_anime_skip', {anime: anime.id}) %}
-          {% endif %}
-          <form method="post" action="{{ action }}" class="join">
-            {% if anime.state is not null and anime.state.value != 'skipped' %}
-              {% if anime.score != 0 %}
-                <a class="btn btn-sm btn-primary cursor-default join-item">
-                  {{ starIcon }}
-                  {{ anime.score }}
-                </a>
+      <table class="table">
+        <thead>
+        <tr>
+          <th>Name</th>
+          <th>Kind</th>
+          <th>Status</th>
+          <th>Progress</th>
+          <th>Score</th>
+          <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for anime in series.animes %}
+          {% set animeCompleted = anime.state is not null and anime.state.value == 'completed' %}
+          <tr class="{{ html_classes('series-list-item-anime', {'text-success': animeCompleted}) }}">
+            <td><a class="link" href="{{ anime.url|shikimori_url }}">{{ anime.name }}</a></td>
+            <td>{{ anime.kind ? anime.kind.value : '&mdash;' }}</td>
+            <td>{{ anime.status.value }}</td>
+            <td>{{ anime.state ? anime.state.value : '&mdash;' }}</td>
+            <td>{{ anime.score is not null and anime.score > 0 ? anime.score : '&mdash;' }}</td>
+            <td>
+              {% if anime.state is not null and anime.state.value != 'skipped' %}
+                &mdash;
+              {% else %}
+                {% if anime.state is null %}
+                  {% set action = path('app_anime_skip', {anime: anime.id}) %}
+                {% else %}
+                  {% set action = path('app_anime_observe', {anime: anime.id}) %}
+                {% endif %}
+                <form method="post" action="{{ action }}" class="inline">
+                  <input type="hidden" name="{{ csrfName }}" value="{{ csrfValue }}" />
+                  {% if anime.state is null %}
+                    <button
+                      class="{% if not syncInProgress %}link link-error{% endif %}"
+                      {% if syncInProgress %}disabled{% endif %}
+                    >
+                      Skip
+                    </button>
+                  {% else %}
+                    <button
+                      class="{% if not syncInProgress %}link link-success{% endif %}"
+                      {% if syncInProgress %}disabled{% endif %}
+                    >
+                      Observe
+                    </button>
+                  {% endif %}
+                </form>
               {% endif %}
-              {% if anime.state.value != 'completed' %}
-                <a class="btn btn-sm btn-accent cursor-default join-item">{{ anime.state.value }}</a>
-              {% endif %}
-            {% elseif anime.state is not null %}
-              <button
-                class="btn btn-sm btn-secondary underline join-item"
-                {% if this.user.sync.inProgress %}disabled{% endif %}
-              >Observe
-              </button>
-            {% else %}
-              <button
-                class="btn btn-sm btn-secondary underline join-item"
-                {% if this.user.sync.inProgress %}disabled{% endif %}
-              >Skip
-              </button>
-            {% endif %}
-
-            <input type="hidden" name="{{ csrfName }}" value="{{ csrfValue }}" />
-
-            {% if anime.kind is not null %}
-              <span class="btn btn-sm btn-primary cursor-default join-item">{{ anime.kind.value }}</span>
-            {% endif %}
-            {% if anime.status.value != 'released' %}
-              <span class="btn btn-sm btn-accent cursor-default join-item">{{ anime.status.value }}</span>
-            {% endif %}
-
-            {% set animeCompleted = anime.state is not null and anime.state.value == 'completed' %}
-            <a href="{{ this.url(anime) }}" class="{{ html_classes('btn', 'btn-sm', 'underline', 'join-item', {
-              'btn-success': animeCompleted,
-              'btn-warning': not animeCompleted,
-            }) }}">
-              <span class="tooltip" data-tip="{{ anime.name }}">
-                {{ this.tryShorteningAnimeNameLength(series, anime) }}
-              </span>
-            </a>
-          </form>
-        </div>
-      {% endfor %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
     </div>
+  {% else %}
+    No series found.
   {% endfor %}
 </section>

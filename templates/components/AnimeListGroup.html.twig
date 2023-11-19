@@ -5,7 +5,7 @@
 </tr>
 {% for item in this.items %}
   <tr>
-    <td><a href="{{ this.url(item) }}" class="link">{{ item.animeName }}</a></td>
+    <td><a href="{{ item.animeUrl|shikimori_url }}" class="link">{{ item.animeName }}</a></td>
     <td>{{ item.animeKind.value }}</td>
     <td>{{ item.animeStatus.value }}</td>
     <td>{% if item.score > 0 %}{{ item.score }}{% else %}&mdash;{% endif %}</td>

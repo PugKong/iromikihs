@@ -57,7 +57,7 @@ final class SeriesControllerTest extends ControllerTestCase
         $sections = self::getClient()->getCrawler()->filter('section.series-list');
         self::assertCount(1, $sections);
 
-        $listItems = $sections->first()->filter('div.series-list-item');
+        $listItems = $sections->first()->filter('tr.series-list-item-anime');
         self::assertCount(2, $listItems);
     }
 
@@ -84,7 +84,7 @@ final class SeriesControllerTest extends ControllerTestCase
         $sections = self::getClient()->getCrawler()->filter('section.series-list');
         self::assertCount(1, $sections);
 
-        $listItems = $sections->first()->filter('div.series-list-item');
+        $listItems = $sections->first()->filter('tr.series-list-item-anime');
         self::assertCount(2, $listItems);
     }
 
@@ -111,7 +111,7 @@ final class SeriesControllerTest extends ControllerTestCase
         $sections = self::getClient()->getCrawler()->filter('section.series-list');
         self::assertCount(1, $sections);
 
-        $listItems = $sections->first()->filter('div.series-list-item');
+        $listItems = $sections->first()->filter('tr.series-list-item-anime');
         self::assertCount(2, $listItems);
     }
 
