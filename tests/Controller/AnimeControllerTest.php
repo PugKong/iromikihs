@@ -440,7 +440,9 @@ final class AnimeControllerTest extends ControllerTestCase
     public function testObserveHasNoAnimeRateInSkippedStatus(): void
     {
         $user = UserFactory::createOne();
-        $anime = AnimeFactory::createOne(['status' => Status::RELEASED]);
+        $series = SeriesFactory::createOne();
+        $anime = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
+        SeriesRateFactory::createOne(['user' => $user, 'series' => $series]);
 
         $csrfTokenManager = new CsrfTokenManagerSpy([SimpleForm::CSRF_TOKEN_ID => $csrfToken = '123']);
         $csrfTokenManager->register(self::getContainer());

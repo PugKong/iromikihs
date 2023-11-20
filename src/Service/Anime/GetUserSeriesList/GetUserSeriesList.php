@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service\Anime\GetUserSeriesList;
 
 use App\Entity\AnimeRateStatus;
+use App\Entity\Series;
 use App\Entity\SeriesState;
 use App\Entity\User;
 use App\Shikimori\Api\Enum\Kind;
@@ -17,18 +18,17 @@ final readonly class GetUserSeriesList
 {
     private Connection $connection;
 
-    public function __construct(
-        Connection $connection,
-    ) {
+    public function __construct(Connection $connection)
+    {
         $this->connection = $connection;
     }
 
     /**
      * @return SeriesResult[]
      */
-    public function __invoke(User $user, SeriesState $state): array
+    public function __invoke(User $user, SeriesState $state, Series $series = null): array
     {
-        $seriesData = $this->findSeries($user, $state);
+        $seriesData = $this->findSeries($user, $state, $series);
         $series = [];
         foreach ($seriesData as $row) {
             $series[$row['series_id']] = new SeriesResult(
@@ -59,7 +59,7 @@ final readonly class GetUserSeriesList
     /**
      * @return Traversable<array{series_id: string, name: string, series_rate_id: string, state: string, score: string}>
      */
-    private function findSeries(User $user, SeriesState $state): Traversable
+    private function findSeries(User $user, SeriesState $state, Series $series = null): Traversable
     {
         $sql = <<<'SQL'
             SELECT s.id series_id, name, r.id series_rate_id, state, score
@@ -68,9 +68,30 @@ final readonly class GetUserSeriesList
             ORDER BY name
             SQL;
 
+        $queryBuilder = $this->connection
+            ->createQueryBuilder()
+            ->select(
+                's.id series_id',
+                'name',
+                'r.id series_rate_id',
+                'state',
+                'score',
+            )
+            ->from('series', 's')
+            ->join('s', 'series_rate', 'r', 's.id = r.series_id')
+            ->andWhere('r.user_id = :user_id')
+            ->setParameter('user_id', $user->getId())
+            ->andWhere('r.state = :state')
+            ->setParameter('state', $state->value)
+            ->orderBy('name')
+        ;
+        if (null !== $series) {
+            $queryBuilder = $queryBuilder->andWhere('s.id = :seriesId')->setParameter('seriesId', $series->getId());
+        }
+
         $result = $this->connection->executeQuery(
-            $sql,
-            ['user_id' => $user->getId(), 'state' => $state->value],
+            $queryBuilder->getSQL(),
+            $queryBuilder->getParameters(),
         );
 
         // @phpstan-ignore-next-line

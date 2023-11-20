@@ -6,9 +6,9 @@ namespace App\Service\Sync;
 
 use App\Entity\User;
 use App\Entity\UserSyncState;
+use App\Exception\UserHasNoLinkedAccountException;
+use App\Exception\UserHasSyncInProgressException;
 use App\Message\SyncUserAnimeRatesMessage;
-use App\Service\Exception\UserHasNoLinkedAccountException;
-use App\Service\Exception\UserHasSyncInProgressException;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;

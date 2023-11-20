@@ -1,0 +1,19 @@
+{% if seriesResult is not defined or seriesResult is null %}
+  <turbo-stream action="remove" target="series-{{ series.id }}"></turbo-stream>
+{% else %}
+  {% set starIcon %}
+    <twig:Icon:Star />
+  {% endset %}
+
+  <turbo-stream action="replace" target="series-{{ series.id }}">
+    <template>
+      {% include 'components/SeriesList.item.html.twig' with {
+        series: seriesResult,
+        starIcon,
+        csrfName: constant('App\\Twig\\Component\\SimpleForm::CSRF_TOKEN_FIELD'),
+        csrfValue: csrf_token(constant('App\\Twig\\Component\\SimpleForm::CSRF_TOKEN_ID')),
+        syncInProgress: app.user.sync.inProgress,
+      } only %}
+    </template>
+  </turbo-stream>
+{% endif %}

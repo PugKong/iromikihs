@@ -7,8 +7,8 @@ namespace App\Controller;
 use App\Entity\SeriesRate;
 use App\Entity\SeriesState;
 use App\Entity\User;
+use App\Exception\UserHasSyncInProgressException;
 use App\Service\Anime\GetUserSeriesList\GetUserSeriesList;
-use App\Service\Exception\UserHasSyncInProgressException;
 use App\Service\Series\Drop;
 use App\Service\Series\Restore;
 use App\Twig\Component\SimpleForm;
@@ -72,7 +72,7 @@ final class SeriesController extends AbstractController
             if (TurboBundle::STREAM_FORMAT === $request->getPreferredFormat()) {
                 $request->setRequestFormat(TurboBundle::STREAM_FORMAT);
 
-                return $this->render('series/remove_series.stream.html.twig', ['series' => $seriesRate->getSeries()]);
+                return $this->render('series/series.stream.html.twig', ['series' => $seriesRate->getSeries()]);
             }
         } catch (UserHasSyncInProgressException) {
             $this->addFlash('error', 'Can not drop series while syncing data');
@@ -97,7 +97,7 @@ final class SeriesController extends AbstractController
             if (TurboBundle::STREAM_FORMAT === $request->getPreferredFormat()) {
                 $request->setRequestFormat(TurboBundle::STREAM_FORMAT);
 
-                return $this->render('series/remove_series.stream.html.twig', ['series' => $seriesRate->getSeries()]);
+                return $this->render('series/series.stream.html.twig', ['series' => $seriesRate->getSeries()]);
             }
         } catch (UserHasSyncInProgressException) {
             $this->addFlash('error', 'Can not restore series while syncing data');

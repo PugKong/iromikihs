@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Service\Exception;
+namespace App\Exception;
 
 use App\Entity\User;
 use RuntimeException;

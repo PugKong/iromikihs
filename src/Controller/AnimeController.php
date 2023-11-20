@@ -6,14 +6,16 @@ namespace App\Controller;
 
 use App\Entity\Anime;
 use App\Entity\User;
+use App\Exception\AnimeHasNoSeriesException;
+use App\Exception\UserAnimeSeriesIsNotRatedException;
+use App\Exception\UserCantObserveAnimeException;
+use App\Exception\UserCantSkipAnimeException;
+use App\Exception\UserHasSyncInProgressException;
 use App\Repository\AnimeRateRepository;
+use App\Repository\SeriesRateRepository;
+use App\Service\Anime\GetUserSeriesList\GetUserSeriesList;
 use App\Service\Anime\Observe;
 use App\Service\Anime\Skip;
-use App\Service\Exception\AnimeHasNoSeriesException;
-use App\Service\Exception\UserAnimeSeriesIsNotRatedException;
-use App\Service\Exception\UserCantObserveAnimeException;
-use App\Service\Exception\UserCantSkipAnimeException;
-use App\Service\Exception\UserHasSyncInProgressException;
 use App\Twig\Component\SimpleForm;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,6 +25,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Stopwatch\Stopwatch;
+use Symfony\UX\Turbo\TurboBundle;
 
 #[IsGranted('ROLE_USER')]
 final class AnimeController extends AbstractController
@@ -38,12 +41,37 @@ final class AnimeController extends AbstractController
     }
 
     #[Route('/animes/{anime}/skip', name: 'app_anime_skip', methods: [Request::METHOD_POST])]
-    public function skip(#[CurrentUser] User $user, Anime $anime, Request $request, Skip $skip): Response
-    {
+    public function skip(
+        #[CurrentUser]
+        User $user,
+        Anime $anime,
+        Request $request,
+        SeriesRateRepository $seriesRates,
+        Skip $skip,
+        GetUserSeriesList $getUserSeriesList,
+    ): Response {
         $this->validateCsrfToken($request);
 
         try {
-            ($skip)($user, $anime);
+            $series = $anime->getSeriesOrFail();
+            $seriesRate = $seriesRates->findOneBy(['user' => $user, 'series' => $series]);
+            if (null === $seriesRate) {
+                throw UserAnimeSeriesIsNotRatedException::create($user, $series);
+            }
+
+            $prevSeriesState = $seriesRate->getState();
+            ($skip)($user, $seriesRate, $anime);
+
+            if (TurboBundle::STREAM_FORMAT === $request->getPreferredFormat()) {
+                $request->setRequestFormat(TurboBundle::STREAM_FORMAT);
+
+                $seriesResults = ($getUserSeriesList)($user, $prevSeriesState, $series);
+
+                return $this->render('series/series.stream.html.twig', [
+                    'series' => $series,
+                    'seriesResult' => $seriesResults[0] ?? null,
+                ]);
+            }
         } catch (UserHasSyncInProgressException) {
             $this->addFlash('error', 'Can not skip anime while syncing data');
         } catch (UserCantSkipAnimeException) {
@@ -58,12 +86,37 @@ final class AnimeController extends AbstractController
     }
 
     #[Route('/animes/{anime}/observe', name: 'app_anime_observe', methods: [Request::METHOD_POST])]
-    public function observe(#[CurrentUser] User $user, Anime $anime, Request $request, Observe $observe): Response
-    {
+    public function observe(
+        #[CurrentUser]
+        User $user,
+        Anime $anime,
+        Request $request,
+        Observe $observe,
+        SeriesRateRepository $seriesRates,
+        GetUserSeriesList $getUserSeriesList,
+    ): Response {
         $this->validateCsrfToken($request);
 
         try {
-            ($observe)($user, $anime);
+            $series = $anime->getSeriesOrFail();
+            $seriesRate = $seriesRates->findOneBy(['user' => $user, 'series' => $series]);
+            if (null === $seriesRate) {
+                throw UserAnimeSeriesIsNotRatedException::create($user, $series);
+            }
+
+            $prevSeriesState = $seriesRate->getState();
+            ($observe)($user, $seriesRate, $anime);
+
+            if (TurboBundle::STREAM_FORMAT === $request->getPreferredFormat()) {
+                $request->setRequestFormat(TurboBundle::STREAM_FORMAT);
+
+                $seriesResults = ($getUserSeriesList)($user, $prevSeriesState, $series);
+
+                return $this->render('series/series.stream.html.twig', [
+                    'series' => $series,
+                    'seriesResult' => $seriesResults[0] ?? null,
+                ]);
+            }
         } catch (UserHasSyncInProgressException) {
             $this->addFlash('error', 'Can not observe anime while syncing data');
         } catch (UserCantObserveAnimeException) {

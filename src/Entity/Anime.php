@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Exception\AnimeHasNoSeriesException;
 use App\Repository\AnimeRepository;
 use App\Shikimori\Api\BaseAnimeData;
 use App\Shikimori\Api\Enum\Kind;
@@ -64,6 +65,15 @@ class Anime
 
     public function getSeries(): ?Series
     {
+        return $this->series;
+    }
+
+    public function getSeriesOrFail(): Series
+    {
+        if (null === $this->series) {
+            throw AnimeHasNoSeriesException::create($this);
+        }
+
         return $this->series;
     }
 

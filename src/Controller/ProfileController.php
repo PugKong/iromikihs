@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Service\Exception\UserHasLinkedAccountException;
-use App\Service\Exception\UserHasSyncInProgressException;
+use App\Exception\UserHasLinkedAccountException;
+use App\Exception\UserHasSyncInProgressException;
 use App\Service\Sync\DispatchLinkAccount;
 use App\Shikimori\Client\Config;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;

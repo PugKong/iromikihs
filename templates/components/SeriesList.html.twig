@@ -9,87 +9,13 @@
 
 <section class="series-list columns-2 mt-4">
   {% for series in this.series %}
-    <div
-      id="series-{{ series.id }}"
-      class="series-list-item bg-base-200 rounded-box shadow-lg shadow-base-300 mb-5 p-5 break-inside-avoid"
-    >
-      <h2 class="text-2xl font-bold">{{ series.name }}</h2>
-
-      {% if series.state.value != 'dropped' %}
-        {% set action = path('app_series_drop', {seriesRate: series.seriesRateId}) %}
-      {% else %}
-        {% set action = path('app_series_restore', {seriesRate: series.seriesRateId}) %}
-      {% endif %}
-      <form method="post" action="{{ action }}" class="series-controls join my-4">
-        <span class="btn btn-sm btn-primary cursor-default join-item">
-          {{ starIcon }}
-          {{ series.score|round(2) }}
-        </span>
-
-        <input type="hidden" name="{{ csrfName }}" value="{{ csrfValue }}" />
-
-        <button
-          class="btn btn-sm btn-secondary underline join-item"
-          {% if syncInProgress %}disabled{% endif %}
-        >
-          {% if series.state.value != 'dropped' %}Drop series{% else %}Restore series{% endif %}
-        </button>
-      </form>
-
-      <table class="table">
-        <thead>
-        <tr>
-          <th>Name</th>
-          <th>Kind</th>
-          <th>Status</th>
-          <th>Progress</th>
-          <th>Score</th>
-          <th>Action</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for anime in series.animes %}
-          {% set animeCompleted = anime.state is not null and anime.state.value == 'completed' %}
-          <tr class="{{ html_classes('series-list-item-anime', {'text-success': animeCompleted}) }}">
-            <td><a class="link" href="{{ anime.url|shikimori_url }}">{{ anime.name }}</a></td>
-            <td>{{ anime.kind ? anime.kind.value : '&mdash;' }}</td>
-            <td>{{ anime.status.value }}</td>
-            <td>{{ anime.state ? anime.state.value : '&mdash;' }}</td>
-            <td>{{ anime.score is not null and anime.score > 0 ? anime.score : '&mdash;' }}</td>
-            <td>
-              {% if anime.state is not null and anime.state.value != 'skipped' %}
-                &mdash;
-              {% else %}
-                {% if anime.state is null %}
-                  {% set action = path('app_anime_skip', {anime: anime.id}) %}
-                {% else %}
-                  {% set action = path('app_anime_observe', {anime: anime.id}) %}
-                {% endif %}
-                <form method="post" action="{{ action }}" class="inline">
-                  <input type="hidden" name="{{ csrfName }}" value="{{ csrfValue }}" />
-                  {% if anime.state is null %}
-                    <button
-                      class="{% if not syncInProgress %}link link-error{% endif %}"
-                      {% if syncInProgress %}disabled{% endif %}
-                    >
-                      Skip
-                    </button>
-                  {% else %}
-                    <button
-                      class="{% if not syncInProgress %}link link-success{% endif %}"
-                      {% if syncInProgress %}disabled{% endif %}
-                    >
-                      Observe
-                    </button>
-                  {% endif %}
-                </form>
-              {% endif %}
-            </td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-    </div>
+    {% include 'components/SeriesList.item.html.twig' with {
+      series,
+      starIcon,
+      csrfName,
+      csrfValue,
+      syncInProgress
+    } only %}
   {% else %}
     No series found.
   {% endfor %}

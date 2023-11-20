@@ -6,7 +6,7 @@ namespace App\Service\Series;
 
 use App\Entity\SeriesRate;
 use App\Entity\User;
-use App\Service\Exception\UserHasSyncInProgressException;
+use App\Exception\UserHasSyncInProgressException;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 
