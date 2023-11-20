@@ -21,6 +21,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Stopwatch\Stopwatch;
+use Symfony\UX\Turbo\TurboBundle;
 
 #[IsGranted('ROLE_USER')]
 final class SeriesController extends AbstractController
@@ -67,6 +68,12 @@ final class SeriesController extends AbstractController
 
         try {
             ($drop)($user, $seriesRate);
+
+            if (TurboBundle::STREAM_FORMAT === $request->getPreferredFormat()) {
+                $request->setRequestFormat(TurboBundle::STREAM_FORMAT);
+
+                return $this->render('series/remove_series.stream.html.twig', ['series' => $seriesRate->getSeries()]);
+            }
         } catch (UserHasSyncInProgressException) {
             $this->addFlash('error', 'Can not drop series while syncing data');
         }
@@ -86,6 +93,12 @@ final class SeriesController extends AbstractController
 
         try {
             ($restore)($user, $seriesRate);
+
+            if (TurboBundle::STREAM_FORMAT === $request->getPreferredFormat()) {
+                $request->setRequestFormat(TurboBundle::STREAM_FORMAT);
+
+                return $this->render('series/remove_series.stream.html.twig', ['series' => $seriesRate->getSeries()]);
+            }
         } catch (UserHasSyncInProgressException) {
             $this->addFlash('error', 'Can not restore series while syncing data');
         }
