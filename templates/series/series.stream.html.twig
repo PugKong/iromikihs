@@ -1,3 +1,9 @@
+<turbo-stream action="replace" target="navbar">
+  <template>
+    <twig:NavBar user="{{ app.user }}" path="{{ referer }}" />
+  </template>
+</turbo-stream>
+
 {% if seriesResult is not defined or seriesResult is null %}
   <turbo-stream action="remove" target="series-{{ series.id }}"></turbo-stream>
 {% else %}

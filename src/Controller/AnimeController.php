@@ -17,7 +17,6 @@ use App\Service\Anime\GetUserSeriesList\GetUserSeriesList;
 use App\Service\Anime\Observe;
 use App\Service\Anime\Skip;
 use App\Twig\Component\SimpleForm;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
@@ -28,7 +27,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
 use Symfony\UX\Turbo\TurboBundle;
 
 #[IsGranted('ROLE_USER')]
-final class AnimeController extends AbstractController
+final class AnimeController extends Controller
 {
     #[Route('/', name: 'app_anime_index')]
     public function index(#[CurrentUser] User $user, AnimeRateRepository $rates, Stopwatch $stopwatch): Response
@@ -68,6 +67,7 @@ final class AnimeController extends AbstractController
                 $seriesResults = ($getUserSeriesList)($user, $prevSeriesState, $series);
 
                 return $this->render('series/series.stream.html.twig', [
+                    'referer' => $this->getRefererPath(),
                     'series' => $series,
                     'seriesResult' => $seriesResults[0] ?? null,
                 ]);
@@ -113,6 +113,7 @@ final class AnimeController extends AbstractController
                 $seriesResults = ($getUserSeriesList)($user, $prevSeriesState, $series);
 
                 return $this->render('series/series.stream.html.twig', [
+                    'referer' => $this->getRefererPath(),
                     'series' => $series,
                     'seriesResult' => $seriesResults[0] ?? null,
                 ]);

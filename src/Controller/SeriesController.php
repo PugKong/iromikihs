@@ -12,7 +12,6 @@ use App\Service\Anime\GetUserSeriesList\GetUserSeriesList;
 use App\Service\Series\Drop;
 use App\Service\Series\Restore;
 use App\Twig\Component\SimpleForm;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -24,7 +23,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
 use Symfony\UX\Turbo\TurboBundle;
 
 #[IsGranted('ROLE_USER')]
-final class SeriesController extends AbstractController
+final class SeriesController extends Controller
 {
     #[Route('/series/incomplete', name: 'app_series_incomplete')]
     public function incomplete(#[CurrentUser] User $user, GetUserSeriesList $getUserSeriesList, Stopwatch $stopwatch): Response
@@ -72,7 +71,10 @@ final class SeriesController extends AbstractController
             if (TurboBundle::STREAM_FORMAT === $request->getPreferredFormat()) {
                 $request->setRequestFormat(TurboBundle::STREAM_FORMAT);
 
-                return $this->render('series/series.stream.html.twig', ['series' => $seriesRate->getSeries()]);
+                return $this->render('series/series.stream.html.twig', [
+                    'referer' => $this->getRefererPath(),
+                    'series' => $seriesRate->getSeries(),
+                ]);
             }
         } catch (UserHasSyncInProgressException) {
             $this->addFlash('error', 'Can not drop series while syncing data');
@@ -97,7 +99,10 @@ final class SeriesController extends AbstractController
             if (TurboBundle::STREAM_FORMAT === $request->getPreferredFormat()) {
                 $request->setRequestFormat(TurboBundle::STREAM_FORMAT);
 
-                return $this->render('series/series.stream.html.twig', ['series' => $seriesRate->getSeries()]);
+                return $this->render('series/series.stream.html.twig', [
+                    'referer' => $this->getRefererPath(),
+                    'series' => $seriesRate->getSeries(),
+                ]);
             }
         } catch (UserHasSyncInProgressException) {
             $this->addFlash('error', 'Can not restore series while syncing data');
