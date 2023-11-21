@@ -56,7 +56,7 @@ final readonly class RateCalculator
 
         $score = $scoreCount > 0 ? $scoreSum / $scoreCount : 0;
 
-        $isCompleted = $releasedCount === ($completedOrWatchingCount + $droppedCount);
+        $isCompleted = $releasedCount <= ($completedOrWatchingCount + $droppedCount);
         $state = $isCompleted ? SeriesState::COMPLETE : SeriesState::INCOMPLETE;
 
         return new RateCalculation(

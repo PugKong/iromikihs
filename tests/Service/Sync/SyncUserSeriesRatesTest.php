@@ -341,4 +341,39 @@ final class SyncUserSeriesRatesTest extends ServiceTestCase
         self::assertEquals($user->object(), $seriesRate->getUser());
         self::assertSame(SeriesState::DROPPED, $seriesRate->getState());
     }
+
+    public function testCanHaveMoreCompletedTitlesThanReleased(): void
+    {
+        $user = UserFactory::new()
+            ->withLinkedAccount()
+            ->withSyncStatus(state: UserSyncState::SERIES_RATES)
+            ->create()
+        ;
+        $series = SeriesFactory::createOne();
+        $completedAnime1 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
+        $completedAnime2 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
+        $skippedAnime = AnimeFactory::createOne(['series' => $series, 'status' => Status::ANONS]);
+        AnimeRateFactory::createOne([
+            'user' => $user,
+            'anime' => $completedAnime1,
+            'status' => AnimeRateStatus::COMPLETED,
+        ]);
+        AnimeRateFactory::createOne([
+            'user' => $user,
+            'anime' => $completedAnime2,
+            'status' => AnimeRateStatus::COMPLETED,
+        ]);
+        AnimeRateFactory::createOne([
+            'user' => $user,
+            'anime' => $skippedAnime,
+            'status' => AnimeRateStatus::SKIPPED,
+        ]);
+
+        $service = self::getService(SyncUserSeriesRates::class);
+        ($service)($user->object());
+
+        $seriesRate = SeriesRateFactory::find(['series' => $series]);
+        self::assertEquals($user->object(), $seriesRate->getUser());
+        self::assertSame(SeriesState::COMPLETE, $seriesRate->getState());
+    }
 }
