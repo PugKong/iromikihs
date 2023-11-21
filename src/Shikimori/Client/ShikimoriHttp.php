@@ -52,7 +52,6 @@ final readonly class ShikimoriHttp implements Shikimori
             $responseClass .= '[]';
         }
 
-        // @phpstan-ignore-next-line
         return $this->serializer->deserialize($content, $responseClass, 'json');
     }
 }
