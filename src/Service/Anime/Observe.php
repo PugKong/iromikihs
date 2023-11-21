@@ -38,36 +38,39 @@ final readonly class Observe
      */
     public function __invoke(User $user, SeriesRate $seriesRate, Anime $anime): void
     {
-        $this->entityManager->wrapInTransaction(
-            function (EntityManagerInterface $entityManager) use ($user, $seriesRate, $anime): void {
-                $sync = $user->getSync();
-                $entityManager->lock($sync, LockMode::PESSIMISTIC_WRITE);
-                $entityManager->refresh($sync);
-                if ($sync->isInProgress()) {
-                    throw UserHasSyncInProgressException::create($user);
-                }
+        $this->entityManager->wrapInTransaction(fn () => $this->observe($user, $seriesRate, $anime));
+    }
 
-                $animeRate = $this->animeRates->findOneBy([
-                    'user' => $user,
-                    'anime' => $anime,
-                    'status' => AnimeRateStatus::SKIPPED,
-                ]);
-                if (null === $animeRate) {
-                    throw UserCantObserveAnimeException::create($user, $anime);
-                }
-                $entityManager->remove($animeRate);
-                $entityManager->flush();
+    /**
+     * @throws UserHasSyncInProgressException
+     * @throws UserCantObserveAnimeException
+     */
+    private function observe(User $user, SeriesRate $seriesRate, Anime $anime): void
+    {
+        $sync = $user->getSync();
+        $this->entityManager->lock($sync, LockMode::PESSIMISTIC_WRITE);
+        $this->entityManager->refresh($sync);
+        $sync->ensureNoActiveSync();
 
-                $series = $seriesRate->getSeries();
-                $calculation = ($this->seriesRateCalculator)($user, $series);
+        $animeRate = $this->animeRates->findOneBy([
+            'user' => $user,
+            'anime' => $anime,
+            'status' => AnimeRateStatus::SKIPPED,
+        ]);
+        if (null === $animeRate) {
+            throw UserCantObserveAnimeException::create($user, $anime);
+        }
+        $this->entityManager->remove($animeRate);
+        $this->entityManager->flush();
 
-                $seriesRate->setScore($calculation->score);
-                if (SeriesState::DROPPED !== $seriesRate->getState()) {
-                    $seriesRate->setState($calculation->state);
-                }
-                $entityManager->persist($seriesRate);
-                $entityManager->flush();
-            },
-        );
+        $series = $seriesRate->getSeries();
+        $calculation = ($this->seriesRateCalculator)($user, $series);
+
+        $seriesRate->setScore($calculation->score);
+        if (SeriesState::DROPPED !== $seriesRate->getState()) {
+            $seriesRate->setState($calculation->state);
+        }
+        $this->entityManager->persist($seriesRate);
+        $this->entityManager->flush();
     }
 }

@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use App\Controller\Controller;
+use App\Tests\TestDouble\CsrfTokenManagerSpy;
 use App\Tests\Trait\GetService;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bridge\Doctrine\DataCollector\DoctrineDataCollector;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\DomCrawler\Crawler;
-use Symfony\Component\HttpKernel\Profiler\Profile;
-use Symfony\Component\HttpKernel\Profiler\Profiler;
+use Symfony\UX\Turbo\TurboBundle;
 use Zenstruck\Foundry\Test\Factories;
 
 abstract class ControllerTestCase extends WebTestCase
@@ -19,14 +18,7 @@ abstract class ControllerTestCase extends WebTestCase
     use Factories;
     use GetService;
 
-    private static ?KernelBrowser $client;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        self::$client = self::createClient();
-    }
+    private static ?KernelBrowser $client = null;
 
     protected function tearDown(): void
     {
@@ -37,9 +29,52 @@ abstract class ControllerTestCase extends WebTestCase
 
     public static function getClient(): KernelBrowser
     {
-        self::assertNotNull(self::$client);
+        if (null === self::$client) {
+            self::ensureKernelShutdown();
+            self::$client = self::createClient();
+        }
 
         return self::$client;
+    }
+
+    public static function requestWithCsrfToken(
+        string $method,
+        string $uri,
+        array $parameters = [],
+        array $server = [],
+    ): Crawler {
+        $client = self::getClient();
+        $csrfTokenManager = new CsrfTokenManagerSpy([Controller::COMMON_CSRF_TOKEN_ID => $csrfToken = '123']);
+        $csrfTokenManager->register($client->getContainer());
+
+        return $client->request(
+            method: $method,
+            uri: $uri,
+            parameters: [...$parameters, Controller::COMMON_CSRF_TOKEN_FIELD => $csrfToken],
+            server: $server,
+        );
+    }
+
+    public static function requestTurboWithCsrfToken(
+        string $method,
+        string $uri,
+        array $parameters = [],
+        array $server = [],
+    ): Crawler {
+        return self::requestWithCsrfToken(
+            method: $method,
+            uri: $uri,
+            parameters: $parameters,
+            server: [...$server, 'HTTP_ACCEPT' => TurboBundle::STREAM_MEDIA_TYPE],
+        );
+    }
+
+    public static function assertResponseIsTurbo(): void
+    {
+        self::assertStringStartsWith(
+            TurboBundle::STREAM_MEDIA_TYPE,
+            self::getClient()->getResponse()->headers->get('content-type', ''),
+        );
     }
 
     public static function assertRequiresAuthentication(string $method, string $uri): void
@@ -107,24 +142,5 @@ abstract class ControllerTestCase extends WebTestCase
     {
         $crawler = self::getClient()->getCrawler();
         self::assertCount(1, $crawler->filter('section.sync-status'));
-    }
-
-    public static function enableProfiler(): void
-    {
-        self::getClient()->enableProfiler();
-        self::getService(EntityManagerInterface::class)->clear();
-        $profiler = self::getClient()->getContainer()->get('profiler');
-        self::assertInstanceOf(Profiler::class, $profiler);
-        $profiler->reset();
-    }
-
-    public static function dbCollector(): DoctrineDataCollector
-    {
-        $profile = self::getClient()->getProfile();
-        self::assertInstanceOf(Profile::class, $profile);
-        $dbCollector = $profile->getCollector('db');
-        self::assertInstanceOf(DoctrineDataCollector::class, $dbCollector);
-
-        return $dbCollector;
     }
 }

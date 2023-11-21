@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Twig\Component;
 
+use App\Controller\Controller;
+use App\Tests\TestDouble\CsrfTokenManagerSpy;
 use App\Twig\Component\SimpleForm;
 
 final class SimpleFormTest extends ComponentTestCase
@@ -17,7 +19,9 @@ final class SimpleFormTest extends ComponentTestCase
     {
         parent::setUp();
 
-        $this->csrfTokenManagerSpy = new CsrfTokenManagerSpy([SimpleForm::CSRF_TOKEN_ID => self::CSRF_TOKEN_VALUE]);
+        $this->csrfTokenManagerSpy = new CsrfTokenManagerSpy([
+            Controller::COMMON_CSRF_TOKEN_ID => self::CSRF_TOKEN_VALUE,
+        ]);
         $this->csrfTokenManagerSpy->register(self::getContainer());
     }
 
@@ -47,6 +51,6 @@ final class SimpleFormTest extends ComponentTestCase
         self::assertSame(self::CSRF_TOKEN_VALUE, $form->filter('input[type="hidden"]')->attr('value'));
 
         $this->csrfTokenManagerSpy->assertCalls(1);
-        $this->csrfTokenManagerSpy->assertHasCall('getToken', SimpleForm::CSRF_TOKEN_ID);
+        $this->csrfTokenManagerSpy->assertHasCall('getToken', Controller::COMMON_CSRF_TOKEN_ID);
     }
 }

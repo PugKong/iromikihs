@@ -9,9 +9,6 @@ use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 #[AsTwigComponent]
 final class SimpleForm
 {
-    public const CSRF_TOKEN_ID = 'simple_form';
-    public const CSRF_TOKEN_FIELD = '_token';
-
     private string $action;
 
     public function mount(string $action): void

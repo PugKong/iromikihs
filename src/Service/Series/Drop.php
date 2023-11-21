@@ -25,18 +25,21 @@ final readonly class Drop
      */
     public function __invoke(User $user, SeriesRate $seriesRate): void
     {
-        $this->entityManager->wrapInTransaction(
-            function (EntityManagerInterface $entityManager) use ($user, $seriesRate): void {
-                $sync = $user->getSync();
-                $entityManager->lock($sync, LockMode::PESSIMISTIC_WRITE);
-                $entityManager->refresh($sync);
-                if ($sync->isInProgress()) {
-                    throw UserHasSyncInProgressException::create($user);
-                }
+        $this->entityManager->wrapInTransaction(fn () => $this->drop($user, $seriesRate));
+    }
 
-                $seriesRate->setState(SeriesState::DROPPED);
-                $entityManager->persist($seriesRate);
-            },
-        );
+    /**
+     * @throws UserHasSyncInProgressException
+     */
+    private function drop(User $user, SeriesRate $seriesRate): void
+    {
+        $sync = $user->getSync();
+        $this->entityManager->lock($sync, LockMode::PESSIMISTIC_WRITE);
+        $this->entityManager->refresh($sync);
+        $sync->ensureNoActiveSync();
+
+        $seriesRate->setState(SeriesState::DROPPED);
+        $this->entityManager->persist($seriesRate);
+        $this->entityManager->flush();
     }
 }

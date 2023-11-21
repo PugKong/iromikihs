@@ -30,26 +30,29 @@ final readonly class DispatchUserDataSync
      */
     public function __invoke(User $user): void
     {
-        $this->entityManager->wrapInTransaction(function (EntityManagerInterface $entityManager) use ($user): void {
-            $sync = $user->getSync();
-            $entityManager->lock($sync, LockMode::PESSIMISTIC_WRITE);
+        $this->entityManager->wrapInTransaction(fn () => $this->dispatch($user));
+    }
 
-            $entityManager->refresh($user);
-            if (!$sync->isLinked()) {
-                throw UserHasNoLinkedAccountException::create($user);
-            }
+    /**
+     * @throws UserHasNoLinkedAccountException
+     * @throws UserHasSyncInProgressException
+     */
+    private function dispatch(User $user): void
+    {
+        $sync = $user->getSync();
+        $this->entityManager->lock($sync, LockMode::PESSIMISTIC_WRITE);
+        $this->entityManager->refresh($user);
 
-            $entityManager->refresh($sync);
-            if ($sync->isInProgress()) {
-                throw UserHasSyncInProgressException::create($user);
-            }
+        $sync->ensureNoActiveSync();
+        if (!$sync->isLinked()) {
+            throw UserHasNoLinkedAccountException::create($user);
+        }
 
-            $sync->setState(UserSyncState::ANIME_RATES);
+        $sync->setState(UserSyncState::ANIME_RATES);
 
-            $entityManager->persist($sync);
-            $entityManager->flush();
+        $this->entityManager->persist($sync);
+        $this->entityManager->flush();
 
-            $this->bus->dispatch(new SyncUserAnimeRatesMessage($user->getId()));
-        });
+        $this->bus->dispatch(new SyncUserAnimeRatesMessage($user->getId()));
     }
 }

@@ -43,5 +43,5 @@ when@test:
       public: true
     App\Shikimori\Client\ShikimoriHttp:
       public: true
-    App\Service\Shikimori\ShikimoriAnimesSeriesFetcher:
+    App\Service\Shikimori\ShikimoriAnimeSeriesFetcher:
       public: true

@@ -14,7 +14,7 @@ use function array_key_exists;
 use function count;
 use function in_array;
 
-final readonly class ShikimoriAnimesSeriesFetcher implements AnimeSeriesFetcher
+final readonly class ShikimoriAnimeSeriesFetcher implements AnimeSeriesFetcher
 {
     public const PREQUEL = 'Prequel';
     public const SEQUEL = 'Sequel';

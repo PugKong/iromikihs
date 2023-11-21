@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Service\Shikimori;
 
+use App\Exception\UserHasNoTokenException;
 use App\Service\Shikimori\TokenData;
 use App\Service\Shikimori\TokenStorage;
 use App\Shikimori\Api\Auth\RefreshTokenRequest;
@@ -115,5 +116,15 @@ final class TokenStorageTest extends ServiceTestCase
             ),
             $user->object(),
         );
+    }
+
+    public function testRetrieveNoAccount(): void
+    {
+        $this->expectException(UserHasNoTokenException::class);
+
+        $user = UserFactory::createOne();
+
+        $storage = self::getService(TokenStorage::class);
+        $storage->retrieve($user->object());
     }
 }

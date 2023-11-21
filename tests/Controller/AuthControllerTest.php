@@ -15,11 +15,12 @@ final class AuthControllerTest extends ControllerTestCase
             'password' => $password = 'qwerty',
         ]);
 
-        self::getClient()->request('GET', '/login');
+        $client = self::getClient();
+        $client->request('GET', '/login');
         self::assertResponseIsSuccessful();
         self::assertPageTitleContains('Login');
 
-        self::getClient()->submitForm('Login', [
+        $client->submitForm('Login', [
             '_username' => $username,
             '_password' => $password,
         ]);
@@ -28,35 +29,38 @@ final class AuthControllerTest extends ControllerTestCase
 
     public function testLoginInvalidCredentials(): void
     {
-        self::getClient()->request('GET', '/login');
-        self::getClient()->submitForm('Login', [
+        $client = self::getClient();
+        $client->request('GET', '/login');
+        $client->submitForm('Login', [
             '_username' => 'unknown',
             '_password' => 'unknown',
         ]);
         self::assertResponseRedirects('http://localhost/login');
 
-        self::getClient()->followRedirect();
+        $client->followRedirect();
         self::assertSelectorTextSame('.alert-error', 'Invalid credentials.');
     }
 
     public function testLoginRedirectAuthenticatedUserToIndex(): void
     {
-        self::getClient()
-            ->loginUser(UserFactory::createOne()->object())
-            ->request('GET', '/login')
-        ;
+        $user = UserFactory::createOne();
+
+        $client = self::getClient();
+        $client->loginUser($user->object());
+        $client->request('GET', '/login');
         self::assertResponseRedirects('/');
     }
 
     public function testLogout(): void
     {
-        self::getClient()
-            ->loginUser(UserFactory::createOne()->object())
-            ->request('GET', '/logout')
-        ;
+        $user = UserFactory::createOne();
+
+        $client = self::getClient();
+        $client->loginUser($user->object());
+        $client->request('GET', '/logout');
         self::assertResponseRedirects('http://localhost/');
 
-        self::getClient()->request('GET', '/login');
+        $client->request('GET', '/login');
         self::assertResponseIsSuccessful();
     }
 }

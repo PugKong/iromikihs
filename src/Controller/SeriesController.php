@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\Series;
 use App\Entity\SeriesRate;
 use App\Entity\SeriesState;
 use App\Entity\User;
@@ -11,11 +12,9 @@ use App\Exception\UserHasSyncInProgressException;
 use App\Service\Anime\GetUserSeriesList\GetUserSeriesList;
 use App\Service\Series\Drop;
 use App\Service\Series\Restore;
-use App\Twig\Component\SimpleForm;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -26,8 +25,12 @@ use Symfony\UX\Turbo\TurboBundle;
 final class SeriesController extends Controller
 {
     #[Route('/series/incomplete', name: 'app_series_incomplete')]
-    public function incomplete(#[CurrentUser] User $user, GetUserSeriesList $getUserSeriesList, Stopwatch $stopwatch): Response
-    {
+    public function incomplete(
+        #[CurrentUser]
+        User $user,
+        GetUserSeriesList $getUserSeriesList,
+        Stopwatch $stopwatch,
+    ): Response {
         $stopwatch->start($watchName = 'series list load');
         $series = ($getUserSeriesList)($user, SeriesState::INCOMPLETE);
         $stopwatch->stop($watchName);
@@ -36,8 +39,12 @@ final class SeriesController extends Controller
     }
 
     #[Route('/series/complete', name: 'app_series_complete')]
-    public function complete(#[CurrentUser] User $user, GetUserSeriesList $getUserSeriesList, Stopwatch $stopwatch): Response
-    {
+    public function complete(
+        #[CurrentUser]
+        User $user,
+        GetUserSeriesList $getUserSeriesList,
+        Stopwatch $stopwatch,
+    ): Response {
         $stopwatch->start($watchName = 'series list load');
         $series = ($getUserSeriesList)($user, SeriesState::COMPLETE);
         $stopwatch->stop($watchName);
@@ -46,8 +53,12 @@ final class SeriesController extends Controller
     }
 
     #[Route('/series/dropped', name: 'app_series_dropped')]
-    public function dropped(#[CurrentUser] User $user, GetUserSeriesList $getUserSeriesList, Stopwatch $stopwatch): Response
-    {
+    public function dropped(
+        #[CurrentUser]
+        User $user,
+        GetUserSeriesList $getUserSeriesList,
+        Stopwatch $stopwatch,
+    ): Response {
         $stopwatch->start($watchName = 'series list load');
         $series = ($getUserSeriesList)($user, SeriesState::DROPPED);
         $stopwatch->stop($watchName);
@@ -63,24 +74,19 @@ final class SeriesController extends Controller
         Request $request,
         Drop $drop,
     ): Response {
-        $this->validateSeriesManipulationRequest($user, $seriesRate, $request);
+        $this->validateSeriesManipulationRequest($user, $seriesRate);
 
         try {
             ($drop)($user, $seriesRate);
 
             if (TurboBundle::STREAM_FORMAT === $request->getPreferredFormat()) {
-                $request->setRequestFormat(TurboBundle::STREAM_FORMAT);
-
-                return $this->render('series/series.stream.html.twig', [
-                    'referer' => $this->getRefererPath(),
-                    'series' => $seriesRate->getSeries(),
-                ]);
+                return $this->renderStream($seriesRate->getSeries());
             }
         } catch (UserHasSyncInProgressException) {
-            $this->addFlash('error', 'Can not drop series while syncing data');
+            $this->addFlashError('Can not drop series while syncing data');
         }
 
-        return $this->redirect($request->headers->get('referer') ?? '/');
+        return $this->redirect($this->getRefererPath('/'));
     }
 
     #[Route('/series/rates/{seriesRate}/restore', name: 'app_series_restore', methods: [Request::METHOD_POST])]
@@ -91,35 +97,37 @@ final class SeriesController extends Controller
         Request $request,
         Restore $restore,
     ): Response {
-        $this->validateSeriesManipulationRequest($user, $seriesRate, $request);
+        $this->validateSeriesManipulationRequest($user, $seriesRate);
 
         try {
             ($restore)($user, $seriesRate);
 
             if (TurboBundle::STREAM_FORMAT === $request->getPreferredFormat()) {
-                $request->setRequestFormat(TurboBundle::STREAM_FORMAT);
-
-                return $this->render('series/series.stream.html.twig', [
-                    'referer' => $this->getRefererPath(),
-                    'series' => $seriesRate->getSeries(),
-                ]);
+                return $this->renderStream($seriesRate->getSeries());
             }
         } catch (UserHasSyncInProgressException) {
-            $this->addFlash('error', 'Can not restore series while syncing data');
+            $this->addFlashError('Can not restore series while syncing data');
         }
 
-        return $this->redirect($request->headers->get('referer') ?? '/');
+        return $this->redirect($this->getRefererPath('/'));
     }
 
-    private function validateSeriesManipulationRequest(User $user, SeriesRate $seriesRate, Request $request): void
+    private function validateSeriesManipulationRequest(User $user, SeriesRate $seriesRate): void
     {
         if (!$user->getId()->equals($seriesRate->getUser()->getId())) {
             throw new AccessDeniedHttpException('Oh no, you can not');
         }
 
-        $csrfToken = (string) $request->request->get(SimpleForm::CSRF_TOKEN_FIELD);
-        if (!$this->isCsrfTokenValid(SimpleForm::CSRF_TOKEN_ID, $csrfToken)) {
-            throw new UnprocessableEntityHttpException('Invalid csrf token');
-        }
+        $this->checkSimpleCsrfToken();
+    }
+
+    private function renderStream(Series $series): Response
+    {
+        $this->container->get('request_stack')->getCurrentRequest()?->setRequestFormat(TurboBundle::STREAM_FORMAT);
+
+        return $this->render('series/series.stream.html.twig', [
+            'referer' => $this->getRefererPath(),
+            'series' => $series,
+        ]);
     }
 }

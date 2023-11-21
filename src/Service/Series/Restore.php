@@ -26,20 +26,23 @@ final readonly class Restore
      */
     public function __invoke(User $user, SeriesRate $seriesRate): void
     {
-        $this->entityManager->wrapInTransaction(
-            function (EntityManagerInterface $entityManager) use ($user, $seriesRate): void {
-                $sync = $user->getSync();
-                $entityManager->lock($sync, LockMode::PESSIMISTIC_WRITE);
-                $entityManager->refresh($sync);
-                if ($sync->isInProgress()) {
-                    throw UserHasSyncInProgressException::create($user);
-                }
+        $this->entityManager->wrapInTransaction(fn () => $this->restore($user, $seriesRate));
+    }
 
-                $calculation = ($this->rateCalculator)($user, $seriesRate->getSeries());
+    /**
+     * @throws UserHasSyncInProgressException
+     */
+    private function restore(User $user, SeriesRate $seriesRate): void
+    {
+        $sync = $user->getSync();
+        $this->entityManager->lock($sync, LockMode::PESSIMISTIC_WRITE);
+        $this->entityManager->refresh($sync);
+        $sync->ensureNoActiveSync();
 
-                $seriesRate->setState($calculation->state);
-                $entityManager->persist($seriesRate);
-            },
-        );
+        $calculation = ($this->rateCalculator)($user, $seriesRate->getSeries());
+
+        $seriesRate->setState($calculation->state);
+        $this->entityManager->persist($seriesRate);
+        $this->entityManager->flush();
     }
 }

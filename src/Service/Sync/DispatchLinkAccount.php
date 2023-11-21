@@ -30,28 +30,29 @@ final readonly class DispatchLinkAccount
      */
     public function __invoke(User $user, string $code): void
     {
-        $this->entityManager->wrapInTransaction(
-            function (EntityManagerInterface $entityManager) use ($user, $code): void {
-                $sync = $user->getSync();
-                $entityManager->lock($sync, LockMode::PESSIMISTIC_WRITE);
+        $this->entityManager->wrapInTransaction(fn () => $this->dispatch($user, $code));
+    }
 
-                $entityManager->refresh($user);
-                if ($sync->isLinked()) {
-                    throw UserHasLinkedAccountException::create($user);
-                }
+    /**
+     * @throws UserHasLinkedAccountException
+     * @throws UserHasSyncInProgressException
+     */
+    private function dispatch(User $user, string $code): void
+    {
+        $sync = $user->getSync();
+        $this->entityManager->lock($sync, LockMode::PESSIMISTIC_WRITE);
+        $this->entityManager->refresh($user);
 
-                $entityManager->refresh($sync);
-                if ($sync->isInProgress()) {
-                    throw UserHasSyncInProgressException::create($user);
-                }
+        $sync->ensureNoActiveSync();
+        if ($sync->isLinked()) {
+            throw UserHasLinkedAccountException::create($user);
+        }
 
-                $sync->setState(UserSyncState::LINK_ACCOUNT);
+        $sync->setState(UserSyncState::LINK_ACCOUNT);
 
-                $entityManager->persist($sync);
-                $entityManager->flush();
+        $this->entityManager->persist($sync);
+        $this->entityManager->flush();
 
-                $this->bus->dispatch(new LinkAccountMessage($user->getId(), $code));
-            },
-        );
+        $this->bus->dispatch(new LinkAccountMessage($user->getId(), $code));
     }
 }

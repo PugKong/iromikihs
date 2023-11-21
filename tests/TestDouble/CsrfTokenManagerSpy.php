@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Twig\Component;
+namespace App\Tests\TestDouble;
 
 use PHPUnit\Framework\Assert;
 use RuntimeException;

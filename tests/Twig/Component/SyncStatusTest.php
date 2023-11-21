@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Twig\Component;
 
+use App\Controller\Controller;
 use App\Entity\UserSyncState;
 use App\Tests\Factory\UserFactory;
-use App\Twig\Component\SimpleForm;
+use App\Tests\TestDouble\CsrfTokenManagerSpy;
 use App\Twig\Component\SyncStatus;
 use DateTimeImmutable;
 
@@ -18,7 +19,7 @@ final class SyncStatusTest extends ComponentTestCase
     {
         parent::setUp();
 
-        $csrfTokenManagerSpy = new CsrfTokenManagerSpy([SimpleForm::CSRF_TOKEN_ID => '123']);
+        $csrfTokenManagerSpy = new CsrfTokenManagerSpy([Controller::COMMON_CSRF_TOKEN_ID => '123']);
         $csrfTokenManagerSpy->register(self::getContainer());
     }
 

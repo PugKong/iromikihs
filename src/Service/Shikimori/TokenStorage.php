@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Service\Shikimori;
 
 use App\Entity\User;
+use App\Exception\UserHasNoTokenException;
 use App\Shikimori\Api\Auth\RefreshTokenRequest;
 use App\Shikimori\Api\Auth\TokenResponse;
 use App\Shikimori\Client\Shikimori;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
-use RuntimeException;
 
 final readonly class TokenStorage
 {
@@ -40,7 +40,7 @@ final readonly class TokenStorage
     {
         $token = $user->getSync()->getToken();
         if (null === $token) {
-            throw new RuntimeException(sprintf('Oh no, user %s has no token', $user->getId()));
+            throw UserHasNoTokenException::create($user);
         }
 
         $data = $this->tokenEncryptor->decrypt($token);

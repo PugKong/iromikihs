@@ -9,8 +9,6 @@ use App\Exception\UserHasLinkedAccountException;
 use App\Exception\UserHasSyncInProgressException;
 use App\Service\Sync\DispatchLinkAccount;
 use App\Shikimori\Client\Config;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
@@ -19,7 +17,7 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[IsGranted('ROLE_USER')]
-final class ProfileController extends AbstractController
+final class ProfileController extends Controller
 {
     private const LINK_ACCOUNT_REDIRECT = 'link_account_redirect';
 
@@ -30,9 +28,9 @@ final class ProfileController extends AbstractController
     }
 
     #[Route('/profile/link/start', name: 'app_profile_link_start')]
-    public function linkAccountStart(Request $request, SessionInterface $session, Config $config): Response
+    public function linkAccountStart(SessionInterface $session, Config $config): Response
     {
-        $session->set(self::LINK_ACCOUNT_REDIRECT, $request->headers->get('referer'));
+        $session->set(self::LINK_ACCOUNT_REDIRECT, $this->getRefererPath('/'));
 
         return $this->redirect($config->authUrl());
     }
@@ -49,13 +47,13 @@ final class ProfileController extends AbstractController
         try {
             ($linkAccount)($user, $code);
         } catch (UserHasLinkedAccountException) {
-            $this->addFlash('error', 'Account already linked.');
+            $this->addFlashError('Account already linked.');
         } catch (UserHasSyncInProgressException) {
-            $this->addFlash('error', 'Can not link account due to active sync.');
+            $this->addFlashError('Can not link account due to active sync.');
         }
 
         /** @var string|null $redirectUrl */
-        $redirectUrl = $session->get(self::LINK_ACCOUNT_REDIRECT);
+        $redirectUrl = $session->remove(self::LINK_ACCOUNT_REDIRECT);
 
         return $this->redirect($redirectUrl ?? '/');
     }

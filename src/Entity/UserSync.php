@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Exception\UserHasSyncInProgressException;
 use App\Repository\UserSyncRepository;
 use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
@@ -102,5 +103,15 @@ class UserSync
     public function isInProgress(): bool
     {
         return null !== $this->state && UserSyncState::FAILED !== $this->state;
+    }
+
+    /**
+     * @throws UserHasSyncInProgressException
+     */
+    public function ensureNoActiveSync(): void
+    {
+        if ($this->isInProgress()) {
+            throw UserHasSyncInProgressException::create($this->getUser());
+        }
     }
 }

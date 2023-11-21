@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Twig\Component;
 
+use App\Controller\Controller;
 use App\Entity\AnimeRateStatus;
 use App\Entity\SeriesState;
 use App\Entity\User;
@@ -11,8 +12,8 @@ use App\Service\Anime\GetUserSeriesList\AnimeResult;
 use App\Service\Anime\GetUserSeriesList\SeriesResult;
 use App\Shikimori\Api\Enum\Kind;
 use App\Shikimori\Api\Enum\Status;
+use App\Tests\TestDouble\CsrfTokenManagerSpy;
 use App\Twig\Component\SeriesList;
-use App\Twig\Component\SimpleForm;
 use Symfony\Component\DomCrawler\Crawler;
 
 final class SeriesListTest extends ComponentTestCase
@@ -26,7 +27,9 @@ final class SeriesListTest extends ComponentTestCase
     {
         parent::setUp();
 
-        $this->csrfTokenManagerSpy = new CsrfTokenManagerSpy([SimpleForm::CSRF_TOKEN_ID => self::CSRF_TOKEN_VALUE]);
+        $this->csrfTokenManagerSpy = new CsrfTokenManagerSpy([
+            Controller::COMMON_CSRF_TOKEN_ID => self::CSRF_TOKEN_VALUE,
+        ]);
         $this->csrfTokenManagerSpy->register(self::getContainer());
     }
 

@@ -1,0 +1,18 @@
+{% if state is null %}
+  {% set action = path('app_anime_skip', {anime: id}) %}
+{% else %}
+  {% set action = path('app_anime_observe', {anime: id}) %}
+{% endif %}
+<form id="anime-{{ id }}-skip-form" method="post" action="{{ action }}" class="inline">
+  <input type="hidden" name="{{ csrfName }}" value="{{ csrfValue }}" />
+  <button
+    class="{{ html_classes('uppercase', 'font-bold', {
+      'link': not syncInProgress,
+      'link-error': not syncInProgress and state is null,
+      'link-success': not syncInProgress and state is not null,
+    }) }}"
+    {% if syncInProgress %}disabled{% endif %}
+  >
+    {% if state is null %}Skip{% else %}Observe{% endif %}
+  </button>
+</form>

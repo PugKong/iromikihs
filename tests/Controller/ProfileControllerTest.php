@@ -34,10 +34,9 @@ final class ProfileControllerTest extends ControllerTestCase
     {
         $user = UserFactory::new()->withLinkedAccount($accountId = 6610)->create();
 
-        self::getClient()
-            ->loginUser($user->object())
-            ->request('GET', '/profile')
-        ;
+        $client = self::getClient();
+        $client->loginUser($user->object());
+        $client->request('GET', '/profile');
 
         self::assertResponseIsSuccessful();
         self::assertPageTitleContains('Profile');
@@ -50,10 +49,11 @@ final class ProfileControllerTest extends ControllerTestCase
 
     public function testLinkAccount(): void
     {
-        self::getClient()
-            ->loginUser($user = UserFactory::createOne()->object())
-            ->request('GET', '/profile/link?code=the_code')
-        ;
+        $user = UserFactory::createOne();
+
+        $client = self::getClient();
+        $client->loginUser($user->object());
+        $client->request('GET', '/profile/link?code=the_code');
         self::assertResponseRedirects('/');
 
         self::assertSame(UserSyncState::LINK_ACCOUNT, $user->getSync()->getState());
@@ -66,16 +66,17 @@ final class ProfileControllerTest extends ControllerTestCase
 
     public function testLinkAccountChecksAccountLinkState(): void
     {
-        self::getClient()
-            ->loginUser(UserFactory::new()->withLinkedAccount()->create()->object())
-            ->request('GET', '/profile/link?code=the_code')
-        ;
+        $user = UserFactory::new()->withLinkedAccount()->create();
+
+        $client = self::getClient();
+        $client->loginUser($user->object());
+        $client->request('GET', '/profile/link?code=the_code');
         self::assertResponseRedirects('/');
 
         $messages = $this->transport('async')->queue()->messages(LinkAccountMessage::class);
         self::assertCount(0, $messages);
 
-        self::getClient()->followRedirect();
+        $client->followRedirect();
         self::assertHasFlashError('Account already linked.');
     }
 
@@ -84,13 +85,14 @@ final class ProfileControllerTest extends ControllerTestCase
      */
     public function testLinkAccountChecksSyncState(?UserSyncState $state, bool $allowed): void
     {
-        self::getClient()
-            ->loginUser(UserFactory::new()->withSyncStatus($state)->create()->object())
-            ->request('GET', '/profile/link?code=the_code')
-        ;
+        $user = UserFactory::new()->withSyncStatus($state)->create();
+
+        $client = self::getClient();
+        $client->loginUser($user->object());
+        $client->request('GET', '/profile/link?code=the_code');
         self::assertResponseRedirects('/');
 
-        self::getClient()->followRedirect();
+        $client->followRedirect();
         if ($allowed) {
             self::assertHasNoFlashError('Can not link account due to active sync.');
         } else {
@@ -111,10 +113,11 @@ final class ProfileControllerTest extends ControllerTestCase
 
     public function testLinkAccountRequiresCodeQueryParameter(): void
     {
-        self::getClient()
-            ->loginUser(UserFactory::createOne()->object())
-            ->request('GET', '/profile/link')
-        ;
+        $user = UserFactory::createOne();
+
+        $client = self::getClient();
+        $client->loginUser($user->object());
+        $client->request('GET', '/profile/link');
         self::assertResponseStatusCodeSame(404);
     }
 
@@ -123,11 +126,12 @@ final class ProfileControllerTest extends ControllerTestCase
      */
     public function testLinkAccountRemembersRedirectLocation(string $fromUrl): void
     {
-        self::getClient()
-            ->loginUser(UserFactory::createOne()->object())
-            ->request('GET', $fromUrl)
-        ;
-        self::getClient()->clickLink('Link your account');
+        $user = UserFactory::createOne();
+
+        $client = self::getClient();
+        $client->loginUser($user->object());
+        $client->request('GET', $fromUrl);
+        $client->clickLink('Link your account');
 
         $linkQuery = http_build_query([
             'client_id' => 'shikimori_client_id',
@@ -137,8 +141,8 @@ final class ProfileControllerTest extends ControllerTestCase
         $linkUrl = "https://shikimori.example.com/oauth/authorize?$linkQuery";
         self::assertResponseRedirects($linkUrl);
 
-        self::getClient()->request('GET', '/profile/link?code=the_code');
-        self::assertResponseRedirects('http://localhost'.$fromUrl);
+        $client->request('GET', '/profile/link?code=the_code');
+        self::assertResponseRedirects($fromUrl);
     }
 
     public static function linkAccountRemembersRedirectLocationProvider(): array

@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use App\Controller\Controller;
 use App\Entity\UserSyncState;
 use App\Message\SyncUserAnimeRatesMessage;
 use App\Tests\Factory\UserFactory;
-use App\Tests\Twig\Component\CsrfTokenManagerSpy;
-use App\Twig\Component\SimpleForm;
-use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Zenstruck\Messenger\Test\InteractsWithMessenger;
 
 final class SyncControllerTest extends ControllerTestCase
@@ -28,12 +26,11 @@ final class SyncControllerTest extends ControllerTestCase
     {
         $user = UserFactory::new()->withLinkedAccount()->create();
 
-        self::getClient()
-            ->loginUser($user->object())
-            ->request('GET', $fromUrl)
-        ;
-        self::getClient()->submitForm('Sync');
-        self::assertResponseRedirects('http://localhost'.$fromUrl);
+        $client = self::getClient();
+        $client->loginUser($user->object());
+        $client->request('GET', $fromUrl);
+        $client->submitForm('Sync');
+        self::assertResponseRedirects($fromUrl);
 
         self::assertSame(UserSyncState::ANIME_RATES, $user->getSync()->getState());
 
@@ -57,13 +54,12 @@ final class SyncControllerTest extends ControllerTestCase
     {
         $user = UserFactory::new()->withLinkedAccount()->create();
 
-        self::getClient()
-            ->loginUser($user->object())
-            ->request('POST', '/sync')
-        ;
+        $client = self::getClient();
+        $client->loginUser($user->object());
+        $client->request('POST', '/sync');
         self::assertResponseIsUnprocessable('Invalid csrf token');
 
-        self::getClient()->request('POST', '/sync', [SimpleForm::CSRF_TOKEN_FIELD => '123']);
+        $client->request('POST', '/sync', [Controller::COMMON_CSRF_TOKEN_FIELD => '123']);
         self::assertResponseIsUnprocessable('Invalid csrf token');
     }
 
@@ -74,17 +70,12 @@ final class SyncControllerTest extends ControllerTestCase
     {
         $user = UserFactory::new()->withLinkedAccount()->withSyncStatus(state: $state)->create();
 
-        self::getClient()->getContainer()->set(
-            CsrfTokenManagerInterface::class,
-            new CsrfTokenManagerSpy([SimpleForm::CSRF_TOKEN_ID => $csrfToken = '123']),
-        );
-        self::getClient()
-            ->loginUser($user->object())
-            ->request('POST', '/sync', [SimpleForm::CSRF_TOKEN_FIELD => $csrfToken])
-        ;
+        $client = self::getClient();
+        $client->loginUser($user->object());
+        self::requestWithCsrfToken('POST', '/sync');
 
         self::assertResponseRedirects('/');
-        self::getClient()->followRedirect();
+        $client->followRedirect();
 
         if ($allowed) {
             self::assertHasNoFlashError('Sync is already in process.');
@@ -108,17 +99,12 @@ final class SyncControllerTest extends ControllerTestCase
     {
         $user = UserFactory::createOne();
 
-        self::getClient()->getContainer()->set(
-            CsrfTokenManagerInterface::class,
-            new CsrfTokenManagerSpy([SimpleForm::CSRF_TOKEN_ID => $csrfToken = '123']),
-        );
-        self::getClient()
-            ->loginUser($user->object())
-            ->request('POST', '/sync', [SimpleForm::CSRF_TOKEN_FIELD => $csrfToken])
-        ;
+        $client = self::getClient();
+        $client->loginUser($user->object());
+        self::requestWithCsrfToken('POST', '/sync');
 
         self::assertResponseRedirects('/');
-        self::getClient()->followRedirect();
+        $client->followRedirect();
 
         self::assertHasFlashError('Link account to start syncing.');
     }

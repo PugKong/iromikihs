@@ -15,6 +15,7 @@ use App\Tests\Factory\AnimeRateFactory;
 use App\Tests\Factory\SeriesFactory;
 use App\Tests\Factory\SeriesRateFactory;
 use App\Tests\Factory\UserFactory;
+use Symfony\Component\Uid\Uuid;
 
 final class SyncUserSeriesRatesHandlerTest extends MessageHandlerTestCase
 {
@@ -37,5 +38,13 @@ final class SyncUserSeriesRatesHandlerTest extends MessageHandlerTestCase
         $seriesRate = SeriesRateFactory::find(['series' => $series]);
         self::assertEquals($user->object(), $seriesRate->getUser());
         self::assertSame(SeriesState::INCOMPLETE, $seriesRate->getState());
+    }
+
+    public function testUserNotFound(): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        $handler = self::getService(SyncUserSeriesRatesHandler::class);
+        ($handler)(new SyncUserSeriesRatesMessage(Uuid::v7()));
     }
 }

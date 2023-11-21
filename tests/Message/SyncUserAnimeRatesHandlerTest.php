@@ -18,6 +18,7 @@ use App\Tests\Factory\UserFactory;
 use App\Tests\TestDouble\Shikimori\ShikimoriSpy;
 use App\Tests\Trait\BaseAnimeDataUtil;
 use DateTimeImmutable;
+use Symfony\Component\Uid\Uuid;
 use Zenstruck\Messenger\Test\InteractsWithMessenger;
 
 class SyncUserAnimeRatesHandlerTest extends MessageHandlerTestCase
@@ -25,7 +26,7 @@ class SyncUserAnimeRatesHandlerTest extends MessageHandlerTestCase
     use BaseAnimeDataUtil;
     use InteractsWithMessenger;
 
-    public function testHandle(): void
+    public function testSyncRates(): void
     {
         $user = UserFactory::new()
             ->withLinkedAccount($accountId = 6610, $accessToken = '123')
@@ -65,5 +66,13 @@ class SyncUserAnimeRatesHandlerTest extends MessageHandlerTestCase
         $messages = $this->transport('async')->queue()->messages(SyncUserSeriesMessage::class);
         self::assertCount(1, $messages);
         self::assertEquals($user->getId(), $messages[0]->userId);
+    }
+
+    public function testUserNotFound(): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        $handler = self::getService(SyncUserAnimeRatesHandler::class);
+        ($handler)(new SyncUserAnimeRatesMessage(Uuid::v7()));
     }
 }

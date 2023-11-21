@@ -5,14 +5,12 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
-use RuntimeException;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
-final class AuthController extends AbstractController
+final class AuthController extends Controller
 {
     #[Route('/login', name: 'app_login')]
     public function login(#[CurrentUser] ?User $user, AuthenticationUtils $utils): Response
@@ -28,11 +26,5 @@ final class AuthController extends AbstractController
             'last_username' => $lastUsername,
             'error' => $error,
         ]);
-    }
-
-    #[Route('/logout', name: 'app_logout')]
-    public function logout(): never
-    {
-        throw new RuntimeException('This code should never be reached');
     }
 }

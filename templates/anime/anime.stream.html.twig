@@ -1,0 +1,21 @@
+{% if seriesStateChanged %}
+  <turbo-stream action="replace" target="navbar">
+    <template>
+      <twig:NavBar user="{{ app.user }}" path="{{ referer }}" />
+    </template>
+  </turbo-stream>
+
+  <turbo-stream action="remove" target="series-{{ anime.series.id }}"></turbo-stream>
+{% else %}
+  <turbo-stream action="replace" target="anime-{{ anime.id }}-skip-form">
+    <template>
+      {% include 'components/SeriesList.anime_form.html.twig' with {
+        id: anime.id,
+        state: status,
+        csrfName: constant('App\\Controller\\Controller::COMMON_CSRF_TOKEN_FIELD'),
+        csrfValue: csrf_token(constant('App\\Controller\\Controller::COMMON_CSRF_TOKEN_ID')),
+        syncInProgress: app.user.sync.inProgress,
+      } only %}
+    </template>
+  </turbo-stream>
+{% endif %}

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Service\Shikimori;
 
-use App\Service\Shikimori\ShikimoriAnimesSeriesFetcher;
+use App\Service\Shikimori\ShikimoriAnimeSeriesFetcher;
 use App\Shikimori\Api\Anime\ItemRequest;
 use App\Shikimori\Api\Anime\ItemResponse;
 use App\Shikimori\Api\Anime\RelatedRequest;
@@ -33,6 +33,10 @@ final class ShikimoriAnimeSeriesFetcherTest extends ServiceTestCase
         $shikimori = self::getService(ShikimoriSpy::class);
         $token = UserFactory::DEFAULT_ACCESS_TOKEN;
         $other = new RelatedResponse('Other', null);
+        $otherWithAnimeData = new RelatedResponse(
+            'Another other',
+            self::createAnimeItem(RelatedResponseAnimeItem::class, 6610),
+        );
 
         $shikimori->addRequest(
             new ItemRequest($token, $firstId = 100),
@@ -58,20 +62,23 @@ final class ShikimoriAnimeSeriesFetcherTest extends ServiceTestCase
         $thirdRelated = self::createAnimeItem(RelatedResponseAnimeItem::class, $thirdId);
 
         $shikimori->addRequest(new RelatedRequest($token, $firstId), [
-            new RelatedResponse(ShikimoriAnimesSeriesFetcher::SEQUEL, $secondRelated),
+            new RelatedResponse(ShikimoriAnimeSeriesFetcher::SEQUEL, $secondRelated),
             $other,
+            $otherWithAnimeData,
         ]);
         $shikimori->addRequest(new RelatedRequest($token, $secondId), [
             $other,
-            new RelatedResponse(ShikimoriAnimesSeriesFetcher::PREQUEL, $firstRelated),
-            new RelatedResponse(ShikimoriAnimesSeriesFetcher::SEQUEL, $thirdRelated),
+            $otherWithAnimeData,
+            new RelatedResponse(ShikimoriAnimeSeriesFetcher::PREQUEL, $firstRelated),
+            new RelatedResponse(ShikimoriAnimeSeriesFetcher::SEQUEL, $thirdRelated),
         ]);
         $shikimori->addRequest(new RelatedRequest($token, $thirdId), [
-            new RelatedResponse(ShikimoriAnimesSeriesFetcher::PREQUEL, $secondRelated),
+            new RelatedResponse(ShikimoriAnimeSeriesFetcher::PREQUEL, $secondRelated),
             $other,
+            $otherWithAnimeData,
         ]);
 
-        $fetcher = self::getService(ShikimoriAnimesSeriesFetcher::class);
+        $fetcher = self::getService(ShikimoriAnimeSeriesFetcher::class);
         $result = ($fetcher)($user->object(), $selectInitialId([$firstId, $secondId, $thirdId]));
 
         self::assertSame('Anime', $result->seriesName);

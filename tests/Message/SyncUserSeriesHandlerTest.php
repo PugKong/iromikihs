@@ -16,6 +16,7 @@ use App\Tests\Factory\UserFactory;
 use App\Tests\TestDouble\Shikimori\AnimeSeriesFetcherSpy;
 use App\Tests\TestDouble\Shikimori\BaseAnimeDataStub;
 use App\Tests\Trait\BaseAnimeDataUtil;
+use Symfony\Component\Uid\Uuid;
 use Zenstruck\Messenger\Test\InteractsWithMessenger;
 
 final class SyncUserSeriesHandlerTest extends MessageHandlerTestCase
@@ -72,5 +73,13 @@ final class SyncUserSeriesHandlerTest extends MessageHandlerTestCase
 
         $messages = $this->transport('async')->queue()->messages(SyncUserSeriesRatesMessage::class);
         self::assertCount(1, $messages);
+    }
+
+    public function testUserNotFound(): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        $handler = self::getService(SyncUserSeriesHandler::class);
+        ($handler)(new SyncUserSeriesMessage(Uuid::v7()));
     }
 }
