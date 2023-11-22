@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>{% block title %}Welcome!{% endblock %}</title>
-  <link rel="icon" href="{{ asset('favicon.svg') }}">
+  <link rel="icon" href="data:image/svg+xml,{{ include('icons/favicon.svg.twig')|url_encode }}">
 
   {% block stylesheets %}
     {{ encore_entry_link_tags('app') }}

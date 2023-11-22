@@ -24,7 +24,6 @@ services:
       - caddy_data:/data:rw
       - caddy_config:/config:rw
       - ./public/build:/srv/app/public/build:ro
-      - ./public/favicon.svg:/srv/app/public/favicon.svg:ro
       - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:rw
     ports: [80:80]
   database:
