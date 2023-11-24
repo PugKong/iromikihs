@@ -11,7 +11,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 final class CreateCommandTest extends CommandTestCase
 {
-    public function testExecuteCreateUser(): void
+    public function testCreateUser(): void
     {
         $tester = self::createCommandTester('app:user:create');
         $tester->setInputs([
@@ -41,9 +41,9 @@ final class CreateCommandTest extends CommandTestCase
     }
 
     /**
-     * @dataProvider executeValidationProvider
+     * @dataProvider validationProvider
      */
-    public function testExecuteValidation(array $inputs, array $display, callable $setUp = null): void
+    public function testValidation(array $inputs, array $display, callable $setUp = null): void
     {
         if (null !== $setUp) {
             $setUp();
@@ -58,7 +58,7 @@ final class CreateCommandTest extends CommandTestCase
         self::assertSame($display, self::getCommandDisplayAsArray($tester));
     }
 
-    public static function executeValidationProvider(): array
+    public static function validationProvider(): array
     {
         $shortUsernameOutput = [
             ...self::questionOutputStrings('Username'),

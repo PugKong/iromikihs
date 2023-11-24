@@ -11,12 +11,13 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[AsCommand('app:user:create', description: 'Creates a new user.')]
 final class CreateCommand extends Command
 {
+    use ValidationUtil;
+
     private Create $create;
     private ValidatorInterface $validator;
 
@@ -67,12 +68,5 @@ final class CreateCommand extends Command
         $io->success(sprintf('User "%s" created', $data->username));
 
         return self::SUCCESS;
-    }
-
-    private function printValidationErrors(SymfonyStyle $io, ConstraintViolationListInterface $violations): void
-    {
-        foreach ($violations as $violation) {
-            $io->error((string) $violation->getMessage());
-        }
     }
 }

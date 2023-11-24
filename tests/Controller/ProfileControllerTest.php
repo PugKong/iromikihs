@@ -7,6 +7,8 @@ namespace App\Tests\Controller;
 use App\Entity\UserSyncState;
 use App\Message\LinkAccountMessage;
 use App\Tests\Factory\UserFactory;
+use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Zenstruck\Messenger\Test\InteractsWithMessenger;
 
 final class ProfileControllerTest extends ControllerTestCase
@@ -44,7 +46,8 @@ final class ProfileControllerTest extends ControllerTestCase
         self::assertHasPageHeader('Profile');
         self::assertHasSyncStatusComponent();
 
-        self::assertSelectorTextSame('main div', "Shikimori account id is $accountId");
+        self::assertSelectorTextSame('span.account-info', "Shikimori account id is $accountId");
+        self::assertSelectorExists('div.change-password');
     }
 
     public function testLinkAccount(): void
@@ -153,6 +156,110 @@ final class ProfileControllerTest extends ControllerTestCase
             ['/series/complete'],
             ['/series/dropped'],
             ['/profile'],
+        ];
+    }
+
+    public function testChangePassword(): void
+    {
+        $user = UserFactory::createOne(['password' => $currentPassword = 'qwerty']);
+
+        $client = self::getClient();
+        $client->loginUser($user->object());
+        $client->request('GET', '/profile');
+        self::assertResponseIsSuccessful();
+
+        $client->submitForm('Change password', [
+            'change_password[currentPassword]' => $currentPassword,
+            'change_password[password]' => $newPassword = 'th3 str0ngest p4ssw0rd',
+            'change_password[passwordRepeat]' => $newPassword,
+        ]);
+        self::assertResponseRedirects('/profile');
+
+        $hasher = self::getService(UserPasswordHasherInterface::class);
+        self::assertTrue($hasher->isPasswordValid($user->object(), $newPassword));
+    }
+
+    /**
+     * @dataProvider changePasswordValidationProvider
+     */
+    public function testChangePasswordValidation(
+        array $expectedErrors,
+        string $currentPassword,
+        string $password,
+        string $passwordRepeat,
+    ): void {
+        $user = UserFactory::createOne(['password' => $oldPassword = 'qwerty']);
+
+        $client = self::getClient();
+        $client->loginUser($user->object());
+        $client->request('GET', '/profile');
+        self::assertResponseIsSuccessful();
+
+        $client->submitForm('Change password', [
+            'change_password[currentPassword]' => $currentPassword,
+            'change_password[password]' => $password,
+            'change_password[passwordRepeat]' => $passwordRepeat,
+        ]);
+        self::assertResponseIsUnprocessable();
+
+        $actualErrors = $client->getCrawler()->filter('ul.alert-error')->each(fn (Crawler $c) => $c->text());
+        self::assertSame($expectedErrors, $actualErrors);
+
+        $hasher = self::getService(UserPasswordHasherInterface::class);
+        self::assertTrue($hasher->isPasswordValid($user->object(), $oldPassword));
+    }
+
+    public static function changePasswordValidationProvider(): array
+    {
+        $currentPassword = 'qwerty';
+        $newPassword = 'th3 str0ngest p4ssw0rd';
+
+        return [
+            'blank current password' => [
+                ['This value should be the user\'s current password.'],
+                '',
+                $newPassword,
+                $newPassword,
+            ],
+            'current password do not match' => [
+                ['This value should be the user\'s current password.'],
+                'asdf',
+                $newPassword,
+                $newPassword,
+            ],
+            'blank new password' => [
+                [
+                    'The password strength is too low. Please use a stronger password.', // new password
+                    'This value should not be blank.', // password repeat
+                ],
+                $currentPassword,
+                '',
+                '',
+            ],
+            'blank password repeat' => [
+                ['This value should not be blank.'],
+                $currentPassword,
+                $newPassword,
+                '',
+            ],
+            'password matches password repeat' => [
+                ['Password does not match.'],
+                $currentPassword,
+                $newPassword,
+                $currentPassword,
+            ],
+            'weak password' => [
+                ['The password strength is too low. Please use a stronger password.'],
+                $currentPassword,
+                'qwerty',
+                'qwerty',
+            ],
+            'only password repeat' => [
+                ['The password strength is too low. Please use a stronger password.'],
+                $currentPassword,
+                '',
+                $newPassword,
+            ],
         ];
     }
 }

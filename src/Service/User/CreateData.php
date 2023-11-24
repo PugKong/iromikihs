@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Service\User;
 
+use App\Validator\Constraint\PasswordRequirements;
 use App\Validator\User\UsernameUnique;
-use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Constraints\Length;
 
 #[UsernameUnique(groups: [self::USERNAME_GROUP])]
 final class CreateData
@@ -14,7 +15,7 @@ final class CreateData
     public const PASSWORD_GROUP = 'password';
 
     public function __construct(
-        #[Assert\Length(
+        #[Length(
             min: 3,
             max: 180,
             minMessage: 'Username is too short. It should have {{ limit }} character(s) or more.',
@@ -22,10 +23,7 @@ final class CreateData
             groups: [self::USERNAME_GROUP],
         )]
         public string $username = '',
-        #[Assert\PasswordStrength(
-            minScore: Assert\PasswordStrength::STRENGTH_STRONG,
-            groups: [self::PASSWORD_GROUP],
-        )]
+        #[PasswordRequirements(['groups' => [self::PASSWORD_GROUP]])]
         public string $password = '',
     ) {
     }
