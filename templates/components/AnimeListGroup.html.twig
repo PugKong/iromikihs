@@ -1,13 +1,17 @@
 <tr class="bg-base-300">
   <th colspan="4">
-    {{ title }} <span class="badge badge-primary">{{ this.items|length }}</span>
+    <span>{{ title }}</span>
+    <span class="badge badge-primary">{{ this.items|length }}</span>
   </th>
 </tr>
 {% for item in this.items %}
   <tr>
-    <td><a href="{{ item.animeUrl|shikimori_url }}" class="link">{{ item.animeName }}</a></td>
-    <td>{{ item.animeKind.value }}</td>
-    <td>{{ item.animeStatus.value }}</td>
+    <td>
+      <p><a href="{{ item.animeUrl|shikimori_url }}" class="link">{{ item.animeName }}</a></p>
+      <p class="md:hidden">{{ item.animeKind.value }} / {{ item.animeStatus.value }}</p>
+    </td>
+    <td class="hidden md:table-cell">{{ item.animeKind.value }}</td>
+    <td class="hidden md:table-cell">{{ item.animeStatus.value }}</td>
     <td>{% if item.score > 0 %}{{ item.score }}{% else %}&mdash;{% endif %}</td>
   </tr>
 {% endfor %}

@@ -1,3 +1,5 @@
-<section class="flash p-4 rounded-box shadow-lg shadow-base-300 bg-error font-bold text-base-300">
+<section {{ stimulus_action('flash', 'destroy', 'click') }}
+  class="flash mt-4 p-4 rounded-box shadow-lg shadow-base-300 bg-error font-bold text-base-300"
+>
   {% block content %}{% endblock %}
 </section>

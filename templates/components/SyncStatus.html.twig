@@ -1,4 +1,4 @@
-<section class="sync-status p-4 rounded-box shadow-lg shadow-base-300 bg-base-200">
+<section class="sync-status mt-4 p-4 rounded-box shadow-lg shadow-base-300 bg-base-200">
   {% if not this.user.sync.linked and this.state is null %}
     Shikimori account is not linked.
     <a href="{{ path('app_profile_link_start') }}" class="btn btn-xs btn-primary">Link your account</a> to enable sync.

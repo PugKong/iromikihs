@@ -3,15 +3,20 @@
 {% block body %}
   <twig:NavBar user="{{ app.user }}" path="{{ app.request.pathInfo }}" />
 
-  {% for message in app.flashes('error') %}
-    <div class="container mx-auto p-4">
-      <twig:Flash>{{ message }}</twig:Flash>
+  {% set flashes = app.flashes %}
+  {% if flashes|length > 0 %}
+    <div {{ stimulus_controller('flash') }} class="xl:container xl:mx-auto" data-turbo-temporary>
+      {% for messages in flashes %}
+        {% for message in messages %}
+          <twig:Flash>{{ message }}</twig:Flash>
+        {% endfor %}
+      {% endfor %}
     </div>
-  {% endfor %}
+  {% endif %}
 
-  <div class="container mx-auto p-4">
+  <div class="xl:container xl:mx-auto mx-4 mt-4">
     <twig:SyncStatus user="{{ app.user }}" />
   </div>
 
-  <main class="container mx-auto p-4">{% block content %}{% endblock %}</main>
+  <main class="xl:container xl:mx-auto mx-4 mt-4">{% block content %}{% endblock %}</main>
 {% endblock %}

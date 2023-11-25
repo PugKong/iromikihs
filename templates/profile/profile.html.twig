@@ -5,14 +5,14 @@
 {% block content %}
   <twig:PageHeader>Profile</twig:PageHeader>
 
-  <div class="columns-2 mt-4">
+  <div class="columns-1 xl:columns-2 mt-4">
     {% if app.user.sync.linked %}
-      <div class="bg-base-200 rounded-box shadow-lg shadow-base-300 p-5 break-inside-avoid">
+      <div class="bg-base-200 rounded-box shadow-lg shadow-base-300 p-5 break-inside-avoid mb-5">
         <h2 class="text-2xl font-bold">Account</h2>
         <span class="account-info">Shikimori account id is {{ app.user.sync.accountId }}</span>
       </div>
     {% endif %}
-    <div class="change-password bg-base-200 rounded-box shadow-lg shadow-base-300 p-5 break-inside-avoid">
+    <div class="change-password bg-base-200 rounded-box shadow-lg shadow-base-300 p-5 break-inside-avoid mb-5">
       <h2 class="text-2xl font-bold">Change password</h2>
       {{ form(changePasswordForm) }}
     </div>

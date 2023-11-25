@@ -314,7 +314,19 @@ final class SeriesListTest extends ComponentTestCase
         $actualBody = $table->filterXPath('//tbody/tr')->each(
             fn (Crawler $row): array => $row
                 ->filterXPath('//td|//th')->each(
-                    fn (Crawler $cell) => $cell->text(),
+                    function (Crawler $cell) {
+                        if (0 === $cell->children()->count()) {
+                            return $cell->text();
+                        }
+
+                        $texts = $cell
+                            ->children()
+                            ->filterXPath('*[not(contains(@class, "md:hidden"))]')
+                            ->each(fn (Crawler $c) => $c->text())
+                        ;
+
+                        return implode(' ', $texts);
+                    },
                 ),
         );
         self::assertSame($expectedBody, $actualBody);

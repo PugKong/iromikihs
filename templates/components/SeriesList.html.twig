@@ -3,7 +3,7 @@
 
 {% set syncInProgress = this.user.sync.inProgress %}
 
-<section class="series-list columns-2 mt-4">
+<section class="series-list columns-1 xl:columns-2 mt-4">
   {% for series in this.series %}
     <div
       id="series-{{ series.id }}"
@@ -36,9 +36,9 @@
         <thead>
         <tr>
           <th>Name</th>
-          <th>Kind</th>
-          <th>Status</th>
-          <th>Progress</th>
+          <th class="hidden md:table-cell">Kind</th>
+          <th class="hidden md:table-cell">Status</th>
+          <th class="hidden md:table-cell">Progress</th>
           <th>Score</th>
           <th>Action</th>
         </tr>
@@ -47,10 +47,17 @@
         {% for anime in series.animes %}
           {% set animeCompleted = anime.state is not null and anime.state.value == 'completed' %}
           <tr class="{{ html_classes('series-list-item-anime', {'text-success': animeCompleted}) }}">
-            <td><a class="link" href="{{ anime.url|shikimori_url }}">{{ anime.name }}</a></td>
-            <td>{{ anime.kind ? anime.kind.value : '&mdash;' }}</td>
-            <td>{{ anime.status.value }}</td>
-            <td>{{ anime.state ? anime.state.value : '&mdash;' }}</td>
+            <td>
+              <p><a class="link" href="{{ anime.url|shikimori_url }}">{{ anime.name }}</a></p>
+              <p class="md:hidden">
+                {{ anime.kind ? anime.kind.value : '&mdash;' }}
+                / {{ anime.status.value }}
+                / {{ anime.state ? anime.state.value : '&mdash;' }}
+              </p>
+            </td>
+            <td class="hidden md:table-cell">{{ anime.kind ? anime.kind.value : '&mdash;' }}</td>
+            <td class="hidden md:table-cell">{{ anime.status.value }}</td>
+            <td class="hidden md:table-cell">{{ anime.state ? anime.state.value : '&mdash;' }}</td>
             <td>{{ anime.score is not null and anime.score > 0 ? anime.score : '&mdash;' }}</td>
             <td>
               {% if anime.state is not null and anime.state.value != 'skipped' %}
