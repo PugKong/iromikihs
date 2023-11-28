@@ -25,11 +25,10 @@ final class NavBar
     private RouterInterface $router;
 
     public function __construct(
-        AnimeRateRepository  $animeRates,
+        AnimeRateRepository $animeRates,
         SeriesRateRepository $seriesRates,
-        RouterInterface      $router,
-    )
-    {
+        RouterInterface $router,
+    ) {
         $this->animeRates = $animeRates;
         $this->seriesRates = $seriesRates;
         $this->router = $router;

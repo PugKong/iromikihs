@@ -23,8 +23,30 @@ final class AuthControllerTest extends ControllerTestCase
         $client->submitForm('Login', [
             '_username' => $username,
             '_password' => $password,
+            '_remember_me' => false,
         ]);
         self::assertResponseRedirects('http://localhost/');
+        self::assertNull($client->getCookieJar()->get('REMEMBERME'));
+    }
+
+    public function testLoginRememberMe(): void
+    {
+        UserFactory::createOne([
+            'username' => $username = 'john',
+            'password' => $password = 'qwerty',
+        ]);
+
+        $client = self::getClient();
+        $client->request('GET', '/login');
+        self::assertResponseIsSuccessful();
+
+        $client->submitForm('Login', [
+            '_username' => $username,
+            '_password' => $password,
+            '_remember_me' => true,
+        ]);
+        self::assertResponseRedirects('http://localhost/');
+        self::assertNotNull($client->getCookieJar()->get('REMEMBERME'));
     }
 
     public function testLoginInvalidCredentials(): void
