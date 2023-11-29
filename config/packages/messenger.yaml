@@ -20,9 +20,6 @@ framework:
       App\Message\SyncUserAnimeRatesMessage: async
       App\Message\SyncUserSeriesMessage: async
       App\Message\SyncUserSeriesRatesMessage: async
-      Symfony\Component\Mailer\Messenger\SendEmailMessage: async
-      Symfony\Component\Notifier\Message\ChatMessage: async
-      Symfony\Component\Notifier\Message\SmsMessage: async
 
 when@test:
   framework:
