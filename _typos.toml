@@ -1,2 +1,7 @@
+[default]
+extend-ignore-identifiers-re = [
+  "IDX_[0-9A-Z]+",
+]
+
 [files]
 extend-exclude = ["tests/Service/Series/NameGptTest.php"]
