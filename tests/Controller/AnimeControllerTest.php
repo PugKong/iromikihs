@@ -109,7 +109,7 @@ final class AnimeControllerTest extends ControllerTestCase
             'score' => 3,
         ]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', '/');
 
@@ -155,7 +155,7 @@ final class AnimeControllerTest extends ControllerTestCase
         $anime2 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
         AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime1, 'status' => AnimeRateStatus::COMPLETED]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', $fromUrl);
         self::assertResponseIsSuccessful();
@@ -191,7 +191,7 @@ final class AnimeControllerTest extends ControllerTestCase
         AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
         AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime1, 'status' => AnimeRateStatus::COMPLETED]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         self::requestTurboWithCsrfToken('POST', sprintf('/animes/%d/skip', $anime2->getId()));
         self::assertResponseIsSuccessful();
@@ -220,7 +220,7 @@ final class AnimeControllerTest extends ControllerTestCase
         $anime2 = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
         AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime1, 'status' => AnimeRateStatus::COMPLETED]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         self::requestTurboWithCsrfToken('POST', sprintf('/animes/%d/skip', $anime2->getId()));
         self::assertResponseIsSuccessful();
@@ -243,7 +243,7 @@ final class AnimeControllerTest extends ControllerTestCase
         $user = UserFactory::createOne();
         $anime = AnimeFactory::createOne();
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('POST', sprintf('/animes/%d/skip', $anime->getId()));
         self::assertResponseIsUnprocessable();
@@ -270,7 +270,7 @@ final class AnimeControllerTest extends ControllerTestCase
         ]);
         $anime = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         self::requestWithCsrfToken('POST', sprintf('/animes/%s/skip', $anime->getId()));
         self::assertResponseRedirects('/');
@@ -308,7 +308,7 @@ final class AnimeControllerTest extends ControllerTestCase
         $anime = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
         AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         self::requestWithCsrfToken('POST', sprintf('/animes/%s/skip', $anime->getId()));
         self::assertResponseRedirects('/');
@@ -323,7 +323,7 @@ final class AnimeControllerTest extends ControllerTestCase
         $series = SeriesFactory::createOne();
         $anime = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         self::requestWithCsrfToken('POST', sprintf('/animes/%s/skip', $anime->getId()));
         self::assertResponseRedirects('/');
@@ -337,7 +337,7 @@ final class AnimeControllerTest extends ControllerTestCase
         $user = UserFactory::createOne();
         $anime = AnimeFactory::createOne(['status' => Status::RELEASED]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         self::requestWithCsrfToken('POST', sprintf('/animes/%s/skip', $anime->getId()));
         self::assertResponseRedirects('/');
@@ -363,7 +363,7 @@ final class AnimeControllerTest extends ControllerTestCase
         AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime1, 'status' => AnimeRateStatus::COMPLETED]);
         $rate = AnimeRateFactory::new()->skipped()->create(['user' => $user, 'anime' => $anime2]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', $fromUrl);
 
@@ -404,7 +404,7 @@ final class AnimeControllerTest extends ControllerTestCase
             'status' => AnimeRateStatus::SKIPPED,
         ]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         self::requestTurboWithCsrfToken('POST', sprintf('/animes/%d/observe', $anime2->getId()));
         self::assertResponseIsSuccessful();
@@ -437,7 +437,7 @@ final class AnimeControllerTest extends ControllerTestCase
             'status' => AnimeRateStatus::SKIPPED,
         ]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         self::requestTurboWithCsrfToken('POST', sprintf('/animes/%d/observe', $anime2->getId()));
         self::assertResponseIsSuccessful();
@@ -459,7 +459,7 @@ final class AnimeControllerTest extends ControllerTestCase
         $user = UserFactory::createOne();
         $anime = AnimeFactory::createOne();
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('POST', sprintf('/animes/%d/observe', $anime->getId()));
         self::assertResponseIsUnprocessable();
@@ -487,7 +487,7 @@ final class AnimeControllerTest extends ControllerTestCase
         $anime = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
         AnimeRateFactory::new()->skipped()->create(['user' => $user, 'anime' => $anime]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         self::requestWithCsrfToken('POST', sprintf('/animes/%s/observe', $anime->getId()));
         self::assertResponseRedirects('/');
@@ -508,7 +508,7 @@ final class AnimeControllerTest extends ControllerTestCase
         $anime = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
         SeriesRateFactory::createOne(['user' => $user, 'series' => $series]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         self::requestWithCsrfToken('POST', sprintf('/animes/%s/observe', $anime->getId()));
         self::assertResponseRedirects('/');
@@ -524,7 +524,7 @@ final class AnimeControllerTest extends ControllerTestCase
         $anime = AnimeFactory::createOne(['series' => $series, 'status' => Status::RELEASED]);
         AnimeRateFactory::new()->skipped()->create(['user' => $user, 'anime' => $anime]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         self::requestWithCsrfToken('POST', sprintf('/animes/%s/observe', $anime->getId()));
         self::assertResponseRedirects('/');
@@ -539,7 +539,7 @@ final class AnimeControllerTest extends ControllerTestCase
         $anime = AnimeFactory::createOne(['status' => Status::RELEASED]);
         AnimeRateFactory::new()->skipped()->create(['user' => $user, 'anime' => $anime]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         self::requestWithCsrfToken('POST', sprintf('/animes/%s/observe', $anime->getId()));
         self::assertResponseRedirects('/');

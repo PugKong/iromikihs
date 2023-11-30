@@ -43,7 +43,7 @@ final class SeriesControllerTest extends ControllerTestCase
         AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime2]);
         SeriesRateFactory::createOne(['user' => $user, 'series' => $series, 'state' => SeriesState::INCOMPLETE]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', '/series/incomplete');
         self::assertResponseIsSuccessful();
@@ -69,7 +69,7 @@ final class SeriesControllerTest extends ControllerTestCase
         AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime2]);
         SeriesRateFactory::createOne(['user' => $user, 'series' => $series, 'state' => SeriesState::COMPLETE]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', '/series/complete');
         self::assertResponseIsSuccessful();
@@ -95,7 +95,7 @@ final class SeriesControllerTest extends ControllerTestCase
         AnimeRateFactory::createOne(['user' => $user, 'anime' => $anime2]);
         SeriesRateFactory::createOne(['user' => $user, 'series' => $series, 'state' => SeriesState::DROPPED]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', '/series/dropped');
         self::assertResponseIsSuccessful();
@@ -124,7 +124,7 @@ final class SeriesControllerTest extends ControllerTestCase
             'state' => $state,
         ]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', $fromUrl);
         self::assertResponseIsSuccessful();
@@ -153,7 +153,7 @@ final class SeriesControllerTest extends ControllerTestCase
             'state' => SeriesState::INCOMPLETE,
         ]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         self::requestTurboWithCsrfToken('POST', sprintf('/series/rates/%s/drop', $seriesRate->getId()));
         self::assertResponseIsSuccessful();
@@ -179,7 +179,7 @@ final class SeriesControllerTest extends ControllerTestCase
             'state' => SeriesState::INCOMPLETE,
         ]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('POST', sprintf('/series/rates/%s/drop', $seriesRate->getId()));
         self::assertResponseIsUnprocessable();
@@ -205,7 +205,7 @@ final class SeriesControllerTest extends ControllerTestCase
             'state' => SeriesState::INCOMPLETE,
         ]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         self::requestWithCsrfToken('POST', sprintf('/series/rates/%s/drop', $seriesRate->getId()));
         self::assertResponseRedirects('/');
@@ -242,7 +242,7 @@ final class SeriesControllerTest extends ControllerTestCase
             'state' => SeriesState::INCOMPLETE,
         ]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($otherUser->object());
         self::requestWithCsrfToken('POST', sprintf('/series/rates/%s/drop', $seriesRate->getId()));
         self::assertResponseStatusCodeSame(403);
@@ -262,7 +262,7 @@ final class SeriesControllerTest extends ControllerTestCase
             'state' => SeriesState::DROPPED,
         ]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', $fromUrl = '/series/dropped');
         self::assertResponseIsSuccessful();
@@ -287,7 +287,7 @@ final class SeriesControllerTest extends ControllerTestCase
             'state' => SeriesState::DROPPED,
         ]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', $fromUrl = '/series/dropped');
         self::assertResponseIsSuccessful();
@@ -312,7 +312,7 @@ final class SeriesControllerTest extends ControllerTestCase
             'state' => SeriesState::DROPPED,
         ]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         self::requestTurboWithCsrfToken('POST', sprintf('/series/rates/%s/restore', $seriesRate->getId()));
         self::assertResponseIsSuccessful();
@@ -338,7 +338,7 @@ final class SeriesControllerTest extends ControllerTestCase
             'state' => SeriesState::DROPPED,
         ]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('POST', sprintf('/series/rates/%s/restore', $seriesRate->getId()));
         self::assertResponseIsUnprocessable();
@@ -364,7 +364,7 @@ final class SeriesControllerTest extends ControllerTestCase
             'state' => SeriesState::DROPPED,
         ]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         self::requestWithCsrfToken('POST', sprintf('/series/rates/%s/restore', $seriesRate->getId()));
         self::assertResponseRedirects('/');
@@ -389,7 +389,7 @@ final class SeriesControllerTest extends ControllerTestCase
             'state' => SeriesState::DROPPED,
         ]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($otherUser->object());
         self::requestWithCsrfToken('POST', sprintf('/series/rates/%s/restore', $seriesRate->getId()));
         self::assertResponseStatusCodeSame(403);

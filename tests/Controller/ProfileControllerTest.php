@@ -36,7 +36,7 @@ final class ProfileControllerTest extends ControllerTestCase
     {
         $user = UserFactory::new()->withLinkedAccount($accountId = 6610)->create();
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', '/profile');
 
@@ -54,7 +54,7 @@ final class ProfileControllerTest extends ControllerTestCase
     {
         $user = UserFactory::createOne();
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', '/profile/link?code=the_code');
         self::assertResponseRedirects('/');
@@ -71,7 +71,7 @@ final class ProfileControllerTest extends ControllerTestCase
     {
         $user = UserFactory::new()->withLinkedAccount()->create();
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', '/profile/link?code=the_code');
         self::assertResponseRedirects('/');
@@ -90,7 +90,7 @@ final class ProfileControllerTest extends ControllerTestCase
     {
         $user = UserFactory::new()->withSyncStatus($state)->create();
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', '/profile/link?code=the_code');
         self::assertResponseRedirects('/');
@@ -118,7 +118,7 @@ final class ProfileControllerTest extends ControllerTestCase
     {
         $user = UserFactory::createOne();
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', '/profile/link');
         self::assertResponseStatusCodeSame(404);
@@ -131,7 +131,7 @@ final class ProfileControllerTest extends ControllerTestCase
     {
         $user = UserFactory::createOne();
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', $fromUrl);
         $client->clickLink('Link your account');
@@ -163,7 +163,7 @@ final class ProfileControllerTest extends ControllerTestCase
     {
         $user = UserFactory::createOne(['password' => $currentPassword = 'qwerty']);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', '/profile');
         self::assertResponseIsSuccessful();
@@ -190,7 +190,7 @@ final class ProfileControllerTest extends ControllerTestCase
     ): void {
         $user = UserFactory::createOne(['password' => $oldPassword = 'qwerty']);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', '/profile');
         self::assertResponseIsSuccessful();

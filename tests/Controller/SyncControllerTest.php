@@ -26,7 +26,7 @@ final class SyncControllerTest extends ControllerTestCase
     {
         $user = UserFactory::new()->withLinkedAccount()->create();
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', $fromUrl);
         $client->submitForm('Sync');
@@ -54,7 +54,7 @@ final class SyncControllerTest extends ControllerTestCase
     {
         $user = UserFactory::new()->withLinkedAccount()->create();
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('POST', '/sync');
         self::assertResponseIsUnprocessable('Invalid csrf token');
@@ -70,7 +70,7 @@ final class SyncControllerTest extends ControllerTestCase
     {
         $user = UserFactory::new()->withLinkedAccount()->withSyncStatus(state: $state)->create();
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         self::requestWithCsrfToken('POST', '/sync');
 
@@ -99,7 +99,7 @@ final class SyncControllerTest extends ControllerTestCase
     {
         $user = UserFactory::createOne();
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         self::requestWithCsrfToken('POST', '/sync');
 

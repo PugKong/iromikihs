@@ -15,7 +15,7 @@ final class AuthControllerTest extends ControllerTestCase
             'password' => $password = 'qwerty',
         ]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->request('GET', '/login');
         self::assertResponseIsSuccessful();
         self::assertPageTitleContains('Login');
@@ -36,7 +36,7 @@ final class AuthControllerTest extends ControllerTestCase
             'password' => $password = 'qwerty',
         ]);
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->request('GET', '/login');
         self::assertResponseIsSuccessful();
 
@@ -51,7 +51,7 @@ final class AuthControllerTest extends ControllerTestCase
 
     public function testLoginInvalidCredentials(): void
     {
-        $client = self::getClient();
+        $client = self::createClient();
         $client->request('GET', '/login');
         $client->submitForm('Login', [
             '_username' => 'unknown',
@@ -67,7 +67,7 @@ final class AuthControllerTest extends ControllerTestCase
     {
         $user = UserFactory::createOne();
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', '/login');
         self::assertResponseRedirects('/');
@@ -77,7 +77,7 @@ final class AuthControllerTest extends ControllerTestCase
     {
         $user = UserFactory::createOne();
 
-        $client = self::getClient();
+        $client = self::createClient();
         $client->loginUser($user->object());
         $client->request('GET', '/logout');
         self::assertResponseRedirects('http://localhost/');

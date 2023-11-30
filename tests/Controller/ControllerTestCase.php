@@ -18,23 +18,19 @@ abstract class ControllerTestCase extends WebTestCase
     use Factories;
     use GetService;
 
-    private static ?KernelBrowser $client = null;
-
-    protected function tearDown(): void
+    public static function createClient(array $options = [], array $server = []): KernelBrowser
     {
-        parent::tearDown();
+        self::ensureKernelShutdown();
 
-        self::$client = null;
+        return parent::createClient($options, $server);
     }
 
-    public static function getClient(): KernelBrowser
+    public static function getKernelBrowser(): KernelBrowser
     {
-        if (null === self::$client) {
-            self::ensureKernelShutdown();
-            self::$client = self::createClient();
-        }
+        $client = self::getClient();
+        self::assertInstanceOf(KernelBrowser::class, $client);
 
-        return self::$client;
+        return $client;
     }
 
     public static function requestWithCsrfToken(
@@ -43,7 +39,7 @@ abstract class ControllerTestCase extends WebTestCase
         array $parameters = [],
         array $server = [],
     ): Crawler {
-        $client = self::getClient();
+        $client = self::getKernelBrowser();
         $csrfTokenManager = new CsrfTokenManagerSpy([Controller::COMMON_CSRF_TOKEN_ID => $csrfToken = '123']);
         $csrfTokenManager->register($client->getContainer());
 
@@ -73,33 +69,33 @@ abstract class ControllerTestCase extends WebTestCase
     {
         self::assertStringStartsWith(
             TurboBundle::STREAM_MEDIA_TYPE,
-            self::getClient()->getResponse()->headers->get('content-type', ''),
+            self::getKernelBrowser()->getResponse()->headers->get('content-type', ''),
         );
     }
 
     public static function assertRequiresAuthentication(string $method, string $uri): void
     {
-        self::getClient()->request($method, $uri);
+        self::createClient()->request($method, $uri);
         self::assertResponseRedirects('http://localhost/login');
     }
 
     public static function assertHasFlashError(string $message): void
     {
-        $crawler = self::getClient()->getCrawler();
+        $crawler = self::getKernelBrowser()->getCrawler();
         $errors = $crawler->filter('section.bg-error')->each(fn (Crawler $c) => $c->text());
         self::assertContains($message, $errors, sprintf('Got errors: %s', var_export($errors, true)));
     }
 
     public static function assertHasNoFlashError(string $message): void
     {
-        $crawler = self::getClient()->getCrawler();
+        $crawler = self::getKernelBrowser()->getCrawler();
         $errors = $crawler->filter('section.bg-error')->each(fn (Crawler $c) => $c->text());
         self::assertNotContains($message, $errors, sprintf('Got errors: %s', var_export($errors, true)));
     }
 
     public static function assertTable(string $selector, array $expectedHeaders, array $expectedBody): void
     {
-        $crawler = self::getClient()->getCrawler();
+        $crawler = self::getKernelBrowser()->getCrawler();
 
         $table = $crawler->filter($selector);
         self::assertCount(1, $table);
@@ -135,7 +131,7 @@ abstract class ControllerTestCase extends WebTestCase
 
     public static function assertTableRowsCount(string $selector, int $expected): void
     {
-        $crawler = self::getClient()->getCrawler();
+        $crawler = self::getKernelBrowser()->getCrawler();
 
         $table = $crawler->filter($selector);
         self::assertCount(1, $table);
@@ -146,13 +142,13 @@ abstract class ControllerTestCase extends WebTestCase
 
     public static function assertHasPageHeader(string $header): void
     {
-        $crawler = self::getClient()->getCrawler();
+        $crawler = self::getKernelBrowser()->getCrawler();
         self::assertSame($header, $crawler->filter('section.page-header')->text());
     }
 
     public static function assertHasSyncStatusComponent(): void
     {
-        $crawler = self::getClient()->getCrawler();
+        $crawler = self::getKernelBrowser()->getCrawler();
         self::assertCount(1, $crawler->filter('section.sync-status'));
     }
 }
