@@ -23,6 +23,7 @@ abstract class CommandTestCase extends KernelTestCase
             self::bootKernel();
         }
 
+        self::assertNotNull(self::$kernel);
         $application = new Application(self::$kernel);
         $command = $application->find($commandName);
 
