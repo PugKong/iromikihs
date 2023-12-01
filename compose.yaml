@@ -1,44 +1,9 @@
 services:
   app:
-    build:
-      context: .
-      target: app_php_dev
-      args: { UID: 1000, GID: 1000 }
-    environment:
-      PHP_IDE_CONFIG: "serverName=localhost"
-      DATABASE_URL: "postgresql://app:app@database:5432/app?serverVersion=15&charset=utf8"
     volumes:
-      - php_socket:/var/run/php:rw
-      - php_home:/home/www-data
-      - .:/srv/app:rw
-    extra_hosts: [host.docker.internal:172.17.0.1]
-  web:
-    build:
-      context: .
-      target: app_caddy
-      args: { UID: 1000, GID: 1000 }
-    environment:
-      SERVER_NAME: localhost:80
-    volumes:
-      - php_socket:/var/run/php:ro
-      - caddy_data:/data:rw
-      - caddy_config:/config:rw
-      - ./public/build:/srv/app/public/build:ro
-      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:rw
-    ports: [80:80]
-  database:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: app
-      POSTGRES_PASSWORD: app
-      POSTGRES_USER: app
-    ports: [5432:5432]
-    volumes:
-      - database_data:/var/lib/postgresql/data:rw
+      - caddy_data:/data
+      - caddy_config:/config
 
 volumes:
-  php_socket:
-  php_home:
   caddy_data:
   caddy_config:
-  database_data:

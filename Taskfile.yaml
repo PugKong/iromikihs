@@ -9,13 +9,13 @@ tasks:
     sources:
       - "**/*.php"
     cmds:
-      - vendor/bin/php-cs-fixer fix
+      - docker compose exec app vendor/bin/php-cs-fixer fix
   fmt:caddy:
     desc: Format the Caddyfile
     sources:
       - "docker/caddy/Caddyfile"
     cmds:
-      - docker compose run --rm web caddy fmt --overwrite /etc/caddy/Caddyfile
+      - docker compose run --rm app frankenphp fmt --overwrite /etc/caddy/Caddyfile
   fmt:other:
     desc: Format other files
     sources:

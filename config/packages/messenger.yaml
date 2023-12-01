@@ -21,6 +21,11 @@ framework:
       App\Message\SyncUserSeriesMessage: async
       App\Message\SyncUserSeriesRatesMessage: async
 
+    buses:
+      messenger.bus.default:
+        middleware:
+          - router_context
+
 when@test:
   framework:
     messenger:

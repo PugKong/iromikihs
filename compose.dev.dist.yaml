@@ -1,0 +1,31 @@
+services:
+  app:
+    build:
+      context: .
+      target: frankenphp_dev
+    environment:
+      PHP_IDE_CONFIG: "serverName=localhost"
+      DATABASE_URL: "postgresql://app:app@database:5432/app?serverVersion=15&charset=utf8"
+    volumes:
+      - .:/app
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile
+      - ./docker/conf.d/app.dev.ini:/usr/local/etc/php/conf.d/app.dev.ini
+      - app_home:/home/franken
+    extra_hosts: [host.docker.internal:host-gateway]
+    ports:
+      - { target: 80, published: 80, protocol: tcp }
+      - { target: 443, published: 443, protocol: tcp }
+      - { target: 443, published: 443, protocol: udp }
+  database:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_USER: app
+    ports: [5432:5432]
+    volumes:
+      - database_data:/var/lib/postgresql/data:rw
+
+volumes:
+  app_home:
+  database_data:

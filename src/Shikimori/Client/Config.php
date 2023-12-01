@@ -8,7 +8,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 
-readonly class Config
+final readonly class Config
 {
     public function __construct(
         private RouterInterface $router,

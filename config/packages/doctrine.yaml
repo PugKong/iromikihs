@@ -6,6 +6,7 @@ doctrine:
     # either here or in the DATABASE_URL env var (see .env file)
     #server_version: '15'
 
+    use_savepoints: true
     profiling_collect_backtrace: "%kernel.debug%"
   orm:
     auto_generate_proxy_classes: true
@@ -27,7 +28,6 @@ when@test:
     dbal:
       # "TEST_TOKEN" is typically set by ParaTest
       dbname_suffix: "_test%env(default::TEST_TOKEN)%"
-      use_savepoints: true
 
 when@prod:
   doctrine:

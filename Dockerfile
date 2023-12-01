@@ -1,54 +1,87 @@
-# syntax=docker/dockerfile:1.4
-FROM php:8.2-fpm-alpine AS app_php
+#syntax=docker/dockerfile:1.4
 
-COPY --from=composer/composer:2-bin --link /composer /usr/local/bin/composer
-COPY --from=mlocati/php-extension-installer:latest --link /usr/bin/install-php-extensions /usr/local/bin/
+FROM dunglas/frankenphp:latest-alpine AS frankenphp_upstream
+FROM composer/composer:2-bin AS composer_upstream
 
-RUN apk add --no-cache shadow fcgi
-RUN set -eux; \
-    install-php-extensions \
-		apcu \
-		intl \
-		opcache \
-		zip \
-    pdo pdo_pgsql \
-    ;
 
-COPY --link docker/php/conf.d/app.ini $PHP_INI_DIR/conf.d/
+FROM frankenphp_upstream AS frankenphp_base
 
-COPY --link docker/php/fpm.d/zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
-RUN mkdir -p /var/run/php
+WORKDIR /app
 
-COPY --link docker/php/docker-healthcheck.sh /usr/local/bin/docker-healthcheck
-RUN chmod +x /usr/local/bin/docker-healthcheck
-HEALTHCHECK --interval=10s --timeout=3s --retries=3 CMD ["docker-healthcheck"]
+RUN set -eux; install-php-extensions apcu intl opcache zip pcntl pdo pdo_pgsql
+
+COPY --link docker/conf.d/app.ini $PHP_INI_DIR/conf.d/
+COPY --link docker/Caddyfile /etc/caddy/Caddyfile
+COPY --from=composer_upstream --link /composer /usr/bin/composer
+
+HEALTHCHECK --start-period=60s CMD curl -f http://localhost:2019/metrics || exit 1
+CMD [ "frankenphp", "run", "--config", "/etc/caddy/Caddyfile" ]
+
+
+FROM frankenphp_base AS frankenphp_dev
+
+RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
+
+RUN set -eux; install-php-extensions xdebug
+
+COPY --link docker/conf.d/app.dev.ini $PHP_INI_DIR/conf.d/
+
+CMD [ "frankenphp", "run", "--config", "/etc/caddy/Caddyfile", "--watch" ]
+
+ARG UID=1000
+ARG GID=1000
+RUN addgroup -g $GID franken && adduser -S -u $UID -G franken -D franken && chown -R franken:franken /data /config
+VOLUME /home/franken
+USER franken
+
+
+FROM node:21-alpine AS node_builder
+
+WORKDIR /app
+
+COPY --link ./assets ./assets
+COPY --link ./templates ./templates
+COPY --link ./node_modules ./node_modules
+COPY --link ./vendor ./vendor
+COPY --link ./package.json ./package-lock.json ./postcss.config.js ./tailwind.config.js ./webpack.config.js ./
+
+RUN npm run build
+
+
+FROM frankenphp_base AS frankenphp_prod
+
+ENV FRANKENPHP_CONFIG="worker /app/public/index.php 1"
+ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV APP_ENV=prod
+ENV APP_RUNTIME="Runtime\\FrankenPhpSymfony\\Runtime"
 
 ARG UID=10000
 ARG GID=10000
-RUN usermod -u $UID www-data && groupmod -g $GID www-data && chown www-data:www-data /var/run/php
+RUN addgroup -g $GID franken && adduser -S -H -u $UID -G franken -D franken && chown -R franken:franken /data /config
 
-WORKDIR /srv/app
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
-FROM app_php AS app_php_dev
+COPY --link docker/conf.d/app.prod.ini "$PHP_INI_DIR/conf.d/"
+
+COPY --link ./bin ./bin
+COPY --link ./config ./config
+COPY --link ./migrations ./migrations
+COPY --link ./public/index.php ./public/index.php
+COPY --link ./src ./src
+COPY --link ./templates ./templates
+COPY --link ./translations ./translations
+COPY --link ./vendor ./vendor
+COPY --link ./.env ./composer.* ./symfony.lock ./
+COPY --from=node_builder --link /app/public/build /app/public/build
 
 RUN set -eux; \
-	install-php-extensions \
-    	xdebug \
-    ;
+  mkdir -p var/cache var/log; \
+  composer install --no-cache --prefer-dist --no-dev --no-autoloader --no-scripts --no-progress; \
+  composer dump-autoload --classmap-authoritative --no-dev; \
+  composer dump-env prod; \
+  composer run-script --no-dev post-install-cmd; \
+  chmod +x bin/console; \
+  chown -R franken:franken var; \
+  sync;
 
-RUN mv $PHP_INI_DIR/php.ini-development $PHP_INI_DIR/php.ini
-COPY --link docker/php/conf.d/app.dev.ini $PHP_INI_DIR/conf.d/
-
-RUN chown www-data:www-data /opt
-
-USER www-data
-
-FROM caddy:2.6-alpine AS app_caddy
-
-COPY --link docker/caddy/Caddyfile /etc/caddy/Caddyfile
-
-ARG UID=10000
-ARG GID=10000
-RUN addgroup -g $GID caddy && adduser -S -H -u $UID -G caddy -D caddy && chown -R caddy:caddy /data /config
-
-USER caddy
+USER franken
