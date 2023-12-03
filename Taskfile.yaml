@@ -6,54 +6,52 @@ tasks:
     deps: [fmt:php, fmt:caddy, fmt:other]
   fmt:php:
     desc: Format php files
-    sources:
-      - "**/*.php"
+    sources: ["**/*.php"]
     cmds:
       - docker compose exec app vendor/bin/php-cs-fixer fix
   fmt:caddy:
     desc: Format the Caddyfile
-    sources:
-      - "docker/caddy/Caddyfile"
+    sources: ["docker/caddy/Caddyfile"]
     cmds:
       - docker compose run --rm app frankenphp fmt --overwrite /etc/caddy/Caddyfile
   fmt:other:
     desc: Format other files
-    sources:
-      - "**/*.yaml"
-      - "./assets/**/*.js"
-      - "*.js"
-      - "./assets/**/*.css"
+    sources: ["**/*.yaml", "./assets/**/*.js", "*.js", "./assets/**/*.css"]
     cmds:
       - npx prettier -w .
 
   lint:
     desc: Lint everything
-    deps: [lint:php, lint:symfony, lint:twig, lint:lang]
+    deps: [lint:composer, lint:php, lint:symfony, lint:doctrine, lint:twig, lint:lang]
+  lint:composer:
+    desc: Lint composer files
+    sources: ["composer.json", "composer.lock"]
+    cmds:
+      - docker compose exec app composer validate
   lint:php:
     desc: Lint php files
-    sources:
-      - "**/*.php"
-      - "phpstan.dist.neon"
+    sources: ["**/*.php", "phpstan.dist.neon"]
     cmds:
-      - vendor/bin/phpstan --memory-limit=-1 analyze
+      - docker compose exec app vendor/bin/phpstan --memory-limit=-1 analyze
   lint:symfony:
     desc: Lint symfony configuration
-    sources:
-      - "config/**/*.yaml"
+    sources: ["config/**/*.yaml"]
     cmds:
-      - bin/console lint:container
-      - bin/console lint:yaml config
+      - docker compose exec app bin/console lint:container
+      - docker compose exec app bin/console lint:yaml config
+  lint:doctrine:
+    desc: Lint doctrine mapping
+    sources: ["src/Entity/**/*.php", "migrations/**/*.php"]
+    cmds:
+      - docker compose exec app bin/console doctrine:migrations:migrate --no-interaction
+      - docker compose exec app bin/console doctrine:schema:validate
   lint:twig:
     desc: Lint twig files
-    sources:
-      - "templates/**/*.twig"
+    sources: ["templates/**/*.twig"]
     cmds:
-      - bin/console lint:twig templates
+      - docker compose exec app bin/console lint:twig templates
   lint:lang:
     desc: Lint spelling
-    sources:
-      - "**/*.php"
-      - "**/*.yaml"
-      - "**/*.twig"
+    sources: ["**/*.php", "**/*.yaml", "**/*.twig"]
     cmds:
       - typos

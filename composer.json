@@ -1,4 +1,6 @@
 {
+    "name": "pugkong/iromikihs",
+    "description": "shikimori.one anime series app",
     "type": "project",
     "license": "MIT",
     "minimum-stability": "stable",
