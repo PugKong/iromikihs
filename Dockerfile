@@ -2,6 +2,23 @@
 
 FROM dunglas/frankenphp:latest-alpine AS frankenphp_upstream
 FROM composer/composer:2-bin AS composer_upstream
+FROM node:21-alpine AS node_upstream
+
+
+FROM node_upstream AS node_base
+
+WORKDIR /app
+
+
+FROM node_base AS node_builder
+
+COPY --link ./assets ./assets
+COPY --link ./templates ./templates
+COPY --link ./node_modules ./node_modules
+COPY --link ./vendor ./vendor
+COPY --link ./package.json ./package-lock.json ./postcss.config.js ./tailwind.config.js ./webpack.config.js ./
+
+RUN npm run build
 
 
 FROM frankenphp_upstream AS frankenphp_base
@@ -33,19 +50,6 @@ ARG GID=1000
 RUN addgroup -g $GID franken && adduser -S -u $UID -G franken -D franken && chown -R franken:franken /data /config
 VOLUME /home/franken
 USER franken
-
-
-FROM node:21-alpine AS node_builder
-
-WORKDIR /app
-
-COPY --link ./assets ./assets
-COPY --link ./templates ./templates
-COPY --link ./node_modules ./node_modules
-COPY --link ./vendor ./vendor
-COPY --link ./package.json ./package-lock.json ./postcss.config.js ./tailwind.config.js ./webpack.config.js ./
-
-RUN npm run build
 
 
 FROM frankenphp_base AS frankenphp_prod

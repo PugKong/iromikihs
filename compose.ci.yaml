@@ -1,0 +1,25 @@
+services:
+  node:
+    build:
+      context: .
+      target: node_base
+    command: ["echo", "418"]
+    volumes: ["./:/app"]
+  app:
+    build:
+      context: .
+      target: frankenphp_dev
+      args:
+        UID: 1001
+        GID: 1001
+    environment:
+      DATABASE_URL: "postgresql://app:app@database:5432/app?serverVersion=15&charset=utf8"
+      XDEBUG_MODE: coverage
+    command: ["echo", "418"]
+    volumes: ["./:/app"]
+  database:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: app_test
+      POSTGRES_PASSWORD: app
+      POSTGRES_USER: app

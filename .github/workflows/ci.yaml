@@ -1,0 +1,110 @@
+on:
+  push:
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      # Build ci images
+      - name: Build ci images
+        uses: docker/bake-action@v4
+        with:
+          pull: true
+          load: true
+          files: compose.ci.yaml
+          set: |
+            app.args.UID=1001
+            app.args.GID=1001
+            *.cache-from=type=gha,scope=${{github.ref}}
+            *.cache-from=type=gha,scope=refs/heads/master
+            *.cache-to=type=gha,scope=${{github.ref}},mode=max
+      - name: Warmup ci images
+        run: |
+          docker compose -f compose.ci.yaml run --rm app
+          docker compose -f compose.ci.yaml run --rm node
+          docker compose -f compose.ci.yaml pull database
+
+      # Dependencies
+      - name: Set up composer cache
+        uses: actions/cache@v3
+        with:
+          key: vendor-${{hashFiles('composer.lock')}}
+          path: vendor
+      - name: Set up npm cache
+        uses: actions/cache@v3
+        with:
+          key: node_modules-${{hashFiles('package-lock.json')}}
+          path: node_modules
+      - name: Install dependencies
+        run: |
+          docker compose -f compose.ci.yaml run --rm app composer install
+          docker compose -f compose.ci.yaml run --rm node npm install
+
+      # Tests
+      - name: Pre tests
+        run: |
+          docker compose -f compose.ci.yaml run --rm node npm run build
+          docker compose -f compose.ci.yaml up database --wait
+          docker compose -f compose.ci.yaml run --rm app bin/console --env=test doctrine:migrations:migrate
+      - name: Run tests
+        run: |
+          docker compose -f compose.ci.yaml run --rm app vendor/bin/phpunit --coverage-clover coverage.xml
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+
+      # Linters
+      - name: Run composer validate
+        run: docker compose -f compose.ci.yaml run --rm app composer validate
+      - name: Run phpstan
+        run: docker compose -f compose.ci.yaml run --rm app vendor/bin/phpstan --memory-limit=-1 --no-progress analyze
+      - name: Run lint:container
+        run: docker compose -f compose.ci.yaml run --rm app bin/console lint:container
+      - name: Run lint:yaml
+        run: docker compose -f compose.ci.yaml run --rm app bin/console lint:yaml config
+      - name: Run doctrine:schema:validate
+        run: docker compose -f compose.ci.yaml run --rm app bin/console --env=test doctrine:schema:validate
+      - name: Run lint:twig
+        run: docker compose -f compose.ci.yaml run --rm app bin/console lint:twig templates
+      - name: Run typos
+        uses: crate-ci/typos@master
+
+      # Formatters
+      - name: Run php-cs-fixer
+        run: docker compose -f compose.ci.yaml run --rm app vendor/bin/php-cs-fixer check --diff
+      - name: Run caddy fmt
+        run: docker compose -f compose.ci.yaml run --rm app frankenphp fmt --diff /etc/caddy/Caddyfile
+      - name: Run prettier
+        run: docker compose -f compose.ci.yaml run --rm node npx prettier . --check
+
+      # Build & push final image
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/PugKong/iromikihs
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{github.repository_owner}}
+          password: ${{secrets.GITHUB_TOKEN}}
+      - name: Build and push app image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: frankenphp_prod
+          platforms: linux/amd64,linux/arm64
+          tags: ${{steps.meta.outputs.tags}}
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
