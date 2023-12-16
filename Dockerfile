@@ -1,6 +1,6 @@
 #syntax=docker/dockerfile:1.4
 
-FROM dunglas/frankenphp:latest-alpine AS frankenphp_upstream
+FROM dunglas/frankenphp:1.0.0-php8.3-alpine AS frankenphp_upstream
 FROM composer/composer:2-bin AS composer_upstream
 FROM node:21-alpine AS node_upstream
 
