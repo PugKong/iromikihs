@@ -16,7 +16,7 @@ tasks:
       - docker compose run --rm app frankenphp fmt --overwrite /etc/caddy/Caddyfile
   fmt:other:
     desc: Format other files
-    sources: ["**/*.yaml", "./assets/**/*.js", "*.js", "./assets/**/*.css"]
+    sources: ["**/*.yaml", "./assets/**/*.js", "*.js", "./assets/**/*.css", "./assets/**/*.json"]
     cmds:
       - npx prettier -w .
 
