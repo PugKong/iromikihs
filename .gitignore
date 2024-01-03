@@ -1,6 +1,5 @@
 .idea
 .vscode
-.devcontainer
 .task
 compose.override.yaml
 

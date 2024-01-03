@@ -1,6 +1,18 @@
 version: "3"
 
 tasks:
+  run:
+    internal: true
+    cmds:
+      - silent: true
+        cmd: |
+          if ! command -v docker &> /dev/null
+          then
+              {{.CMD}}
+          else
+              docker compose exec app {{.CMD}}
+          fi
+
   fmt:
     desc: Format everything
     deps: [fmt:php, fmt:caddy, fmt:other]
@@ -8,12 +20,12 @@ tasks:
     desc: Format php files
     sources: ["**/*.php"]
     cmds:
-      - docker compose exec app vendor/bin/php-cs-fixer fix
+      - { task: run, vars: { CMD: "vendor/bin/php-cs-fixer fix" } }
   fmt:caddy:
     desc: Format the Caddyfile
     sources: ["docker/caddy/Caddyfile"]
     cmds:
-      - docker compose run --rm app frankenphp fmt --overwrite /etc/caddy/Caddyfile
+      - { task: run, vars: { CMD: "frankenphp fmt --overwrite /etc/caddy/Caddyfile" } }
   fmt:other:
     desc: Format other files
     sources: ["**/*.yaml", "./assets/**/*.js", "*.js", "./assets/**/*.css", "./assets/**/*.json"]
@@ -27,31 +39,31 @@ tasks:
     desc: Lint composer files
     sources: ["composer.json", "composer.lock"]
     cmds:
-      - docker compose exec app composer validate
+      - { task: run, vars: { CMD: "composer validate" } }
   lint:php:
     desc: Lint php files
     sources: ["**/*.php", "phpstan.dist.neon"]
     cmds:
-      - docker compose exec app vendor/bin/phpstan --memory-limit=-1 analyze
+      - { task: run, vars: { CMD: "vendor/bin/phpstan --memory-limit=-1 analyze" } }
   lint:symfony:
     desc: Lint symfony configuration
     sources: ["config/**/*.yaml"]
     cmds:
-      - docker compose exec app bin/console lint:container
-      - docker compose exec app bin/console lint:yaml config
+      - { task: run, vars: { CMD: "bin/console lint:container" } }
+      - { task: run, vars: { CMD: "bin/console lint:yaml config" } }
   lint:doctrine:
     desc: Lint doctrine mapping
     sources: ["src/Entity/**/*.php", "migrations/**/*.php"]
     cmds:
-      - docker compose exec app bin/console doctrine:migrations:migrate --no-interaction
-      - docker compose exec app bin/console doctrine:schema:validate
+      - { task: run, vars: { CMD: "bin/console doctrine:migrations:migrate --no-interaction" } }
+      - { task: run, vars: { CMD: "bin/console doctrine:schema:validate" } }
   lint:twig:
     desc: Lint twig files
     sources: ["templates/**/*.twig"]
     cmds:
-      - docker compose exec app bin/console lint:twig templates
+      - { task: run, vars: { CMD: "bin/console lint:twig templates" } }
   lint:lang:
     desc: Lint spelling
-    sources: ["**/*.php", "**/*.yaml", "**/*.twig"]
+    sources: ["**/*.php", "**/*.yaml", "**/*.twig", "_typos.toml"]
     cmds:
       - typos
