@@ -16,4 +16,6 @@ enum Kind: string
     case TV_13 = 'tv_13';
     case TV_24 = 'tv_24';
     case TV_48 = 'tv_48';
+    case PV = 'pv';
+    case CM = 'cm';
 }
