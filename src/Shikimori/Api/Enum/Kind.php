@@ -11,6 +11,7 @@ enum Kind: string
     case OVA = 'ova';
     case ONA = 'ona';
     case SPECIAL = 'special';
+    case TV_SPECIAL = 'tv_special';
     case MUSIC = 'music';
     case TV_13 = 'tv_13';
     case TV_24 = 'tv_24';
