@@ -39,7 +39,7 @@ final class ChangePasswordCommandTest extends CommandTestCase
     /**
      * @dataProvider validationProvider
      */
-    public function testValidation(array $inputs, string $username, array $display, callable $setUp = null): void
+    public function testValidation(array $inputs, string $username, array $display, ?callable $setUp = null): void
     {
         if (null !== $setUp) {
             $setUp();

@@ -13,7 +13,7 @@ trait GetService
     /**
      * @phpstan-template T of object
      *
-     * @phpstan-param  class-string<T> $name
+     * @phpstan-param class-string<T> $name
      *
      * @phpstan-return T
      */

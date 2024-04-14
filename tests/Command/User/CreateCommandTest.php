@@ -43,7 +43,7 @@ final class CreateCommandTest extends CommandTestCase
     /**
      * @dataProvider validationProvider
      */
-    public function testValidation(array $inputs, array $display, callable $setUp = null): void
+    public function testValidation(array $inputs, array $display, ?callable $setUp = null): void
     {
         if (null !== $setUp) {
             $setUp();

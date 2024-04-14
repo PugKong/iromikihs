@@ -283,12 +283,12 @@ final class SeriesListTest extends ComponentTestCase
 
     private static function createAnimeResult(
         int $id = 1,
-        Kind $kind = null,
+        ?Kind $kind = null,
         Status $status = Status::ANONS,
         string $name = 'name',
         string $url = '/animes/1',
-        AnimeRateStatus $state = null,
-        int $score = null,
+        ?AnimeRateStatus $state = null,
+        ?int $score = null,
     ): AnimeResult {
         return new AnimeResult(
             id: $id,

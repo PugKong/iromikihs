@@ -23,8 +23,8 @@ trait BaseAnimeDataUtil
     public static function createAnimeItem(
         string $class,
         int $id,
-        DateTimeImmutable $airedOn = null,
-        DateTimeImmutable $releasedOn = null,
+        ?DateTimeImmutable $airedOn = null,
+        ?DateTimeImmutable $releasedOn = null,
     ): BaseAnimeData {
         return new $class(
             id: $id,

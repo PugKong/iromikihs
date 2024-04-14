@@ -28,7 +28,7 @@ abstract class ShikimoriTestCase extends KernelTestCase
      *
      * @phpstan-param Request<T> $request
      *
-     * @phpstan-return (T is ListRequest ? T[] : T)
+     * @phpstan-return ($request is ListRequest ? T[] : T)
      */
     protected static function request(Request $request, MockResponse|array $response): object|array
     {

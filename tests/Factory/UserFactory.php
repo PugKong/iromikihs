@@ -48,9 +48,9 @@ final class UserFactory extends ModelFactory
 
     public function withLinkedAccount(
         int $accountId = 6610,
-        string $accessToken = null,
-        string $refreshToken = null,
-        DateTimeImmutable $expiresAt = null,
+        ?string $accessToken = null,
+        ?string $refreshToken = null,
+        ?DateTimeImmutable $expiresAt = null,
     ): self {
         return $this->afterInstantiate(
             function (User $user) use ($accountId, $accessToken, $refreshToken, $expiresAt): void {
@@ -69,7 +69,7 @@ final class UserFactory extends ModelFactory
         );
     }
 
-    public function withSyncStatus(UserSyncState $state = null, DateTimeImmutable $syncedAt = null): self
+    public function withSyncStatus(?UserSyncState $state = null, ?DateTimeImmutable $syncedAt = null): self
     {
         return $this->afterInstantiate(function (User $user) use ($state, $syncedAt): void {
             $sync = $user->getSync();

@@ -75,7 +75,7 @@ final class NavBar
     /**
      * @phpstan-return NavBarItem
      */
-    private function makeItem(string $route, string $label, int $count = null): array
+    private function makeItem(string $route, string $label, ?int $count = null): array
     {
         $path = $this->router->generate($route);
         $item = [

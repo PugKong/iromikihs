@@ -21,7 +21,7 @@ abstract class Controller extends AbstractController
      *
      * @phpstan-return string|T
      */
-    protected function getRefererPath(string $default = null): ?string
+    protected function getRefererPath(?string $default = null): ?string
     {
         $request = $this->container->get('request_stack')->getCurrentRequest();
         if (null === $request) {
