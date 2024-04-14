@@ -48,6 +48,7 @@ final readonly class SyncUserSeriesRates
         $seriesIds = $this->animeRates->findSeriesIdsByUser($user);
         $syncSeries = $this->series->findBy(['id' => $seriesIds]);
 
+        $createdOrUpdatedRates = [];
         foreach ($syncSeries as $series) {
             $calculation = ($this->rateCalculator)($user, $series);
             if ($calculation->releasedCount <= 1) {
@@ -64,13 +65,17 @@ final readonly class SyncUserSeriesRates
                 $userSeries->setState($calculation->state);
             }
 
+            $createdOrUpdatedRates[] = $userSeries;
             $this->entityManager->persist($userSeries);
+        }
+
+        $orphanedRates = $this->seriesRates->findOtherByUser($user, $createdOrUpdatedRates);
+        foreach ($orphanedRates as $orphanedRate) {
+            $this->entityManager->remove($orphanedRate);
         }
 
         $sync->setState(null);
         $sync->setSyncedAt($this->clock->now());
-        $this->entityManager->flush();
-
         $this->entityManager->flush();
     }
 }

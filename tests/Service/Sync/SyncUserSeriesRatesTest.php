@@ -376,4 +376,25 @@ final class SyncUserSeriesRatesTest extends ServiceTestCase
         self::assertEquals($user->object(), $seriesRate->getUser());
         self::assertSame(SeriesState::COMPLETE, $seriesRate->getState());
     }
+
+    public function testRemoveOrphanedSeries(): void
+    {
+        $user = UserFactory::new()
+            ->withLinkedAccount()
+            ->withSyncStatus(state: UserSyncState::SERIES_RATES)
+            ->create()
+        ;
+        $series = SeriesFactory::createOne();
+        AnimeFactory::createMany(2, ['series' => $series, 'status' => Status::RELEASED]);
+        $orphanedSeriesRate = SeriesRateFactory::createOne([
+            'user' => $user,
+            'series' => $series,
+            'state' => SeriesState::INCOMPLETE,
+        ]);
+
+        $service = self::getService(SyncUserSeriesRates::class);
+        ($service)($user->object());
+
+        $orphanedSeriesRate->assertNotPersisted();
+    }
 }

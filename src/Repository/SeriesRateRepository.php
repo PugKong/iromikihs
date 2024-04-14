@@ -10,6 +10,8 @@ use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+use function count;
+
 /**
  * @extends ServiceEntityRepository<SeriesRate>
  */
@@ -30,5 +32,28 @@ class SeriesRateRepository extends ServiceEntityRepository
         }
 
         return $rate;
+    }
+
+    /**
+     * @param SeriesRate[] $rates
+     *
+     * @return SeriesRate[]
+     */
+    public function findOtherByUser(User $user, array $rates): array
+    {
+        $builder = $this
+            ->createQueryBuilder('r')
+            ->andWhere('r.user = :user')
+            ->setParameter('user', $user)
+        ;
+
+        if (count($rates) > 0) {
+            $builder->andWhere('r NOT IN (:rate)')->setParameter('rate', $rates);
+        }
+
+        /** @var SeriesRate[] $result */
+        $result = $builder->getQuery()->getResult();
+
+        return $result;
     }
 }
