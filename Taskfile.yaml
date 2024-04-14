@@ -20,7 +20,7 @@ tasks:
     desc: Format php files
     sources: ["**/*.php"]
     cmds:
-      - { task: run, vars: { CMD: "vendor/bin/php-cs-fixer fix" } }
+      - { task: run, vars: { CMD: "php vendor/bin/php-cs-fixer fix" } }
   fmt:caddy:
     desc: Format the Caddyfile
     sources: ["docker/caddy/Caddyfile"]
@@ -44,7 +44,7 @@ tasks:
     desc: Lint php files
     sources: ["**/*.php", "phpstan.dist.neon"]
     cmds:
-      - { task: run, vars: { CMD: "vendor/bin/phpstan --memory-limit=-1 analyze" } }
+      - { task: run, vars: { CMD: "php vendor/bin/phpstan --memory-limit=-1 analyze" } }
   lint:symfony:
     desc: Lint symfony configuration
     sources: ["config/**/*.yaml"]
